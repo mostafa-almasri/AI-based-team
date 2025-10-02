@@ -1,0 +1,141 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;700&display=swap');
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Noto Sans', sans-serif;
+  background: linear-gradient(135deg, #2a2a72, #009ffd);
+  background-attachment: fixed;
+  color: white;
+}
+
+/* صندوق المحادثة */
+.chat-container {
+  width: 90%;
+  max-width: 600px;
+  margin: 50px auto;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 15px;
+  padding: 15px;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+/* منطقة الرسائل */
+.chat-thread {
+  list-style: none;
+  padding: 0;
+  max-height: 400px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  max-width: 860px;
+  border-radius: 25px;
+  background-color: white;
+  margin:auto;
+}
+
+/* الرسائل */
+.chat-thread li {
+  position: relative;
+  display: flex;
+  align-items: center;
+  max-width: 80%;
+  padding: 12px;
+  margin: 10px;
+  border-radius: 10px;
+  font-size: 14px;
+  box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.1);
+  word-wrap: break-word;
+}
+
+/* الرسائل المرسلة */
+.sent {
+  align-self: flex-end;
+  background: #00c292;
+  color: white;
+  border-bottom-right-radius: 0;
+}
+
+/* الرسائل المستقبلة */
+.received {
+  align-self: flex-start;
+  background: #f1f1f1;
+  color: black;
+  border-bottom-left-radius: 0;
+}
+
+/* صورة البروفايل */
+.avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  margin: 0 10px;
+}
+
+/* موقع الصورة */
+.sent .avatar {
+  order: 2;
+}
+
+.received .avatar {
+  order: -1;
+}
+.message-time{
+  margin-left:5px;
+
+}
+/* حاوية إدخال الرسالة */
+.chat-window {
+  display: flex;
+  align-items: center;
+  position: fixed;
+  bottom: 15px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 90%;
+  max-width: 900px;
+  background: white;
+  color: #00c292;
+  padding: 10px;
+  border-radius: 25px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* حقل الإدخال */
+.chat-window-message {
+  flex-grow: 1;
+  padding: 12px;
+  font-size: 16px;
+  border: none;
+  border-radius: 20px;
+  outline: none;
+  background: #f1f1f1;
+  margin-right: 10px;
+}
+
+
+
+/* تحسين للشاشات الصغيرة */
+@media (max-width: 768px) {
+  .chat-window  {
+    width: 95%;
+    bottom: 10px;
+  }
+  
+  .chat-window-message {
+    font-size: 14px;
+    padding: 10px;
+  }
+  
+  .chat-send-btn {
+    padding: 10px 14px;
+  }
+
+  .chat-container {
+    width: 95%;
+  }
+  
+  .chat-thread li {
+    max-width: 90%;
+  }
+}
