@@ -1,4 +1,4 @@
-@extends('manger.home')
+@extends('member.home')
 @section('content')
 <div class="normal-table-area">
         <div class="container">
@@ -6,7 +6,7 @@
                 <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
                     <div class="normal-table-list mg-t-30">
                         <div class="basic-tb-hd">
-                            <h2>My Team</h2>
+                            <h2>Team</h2>
                         </div>
                         <div class="bsc-tbl-hvr">
                         @if($member->count()>0)
@@ -16,7 +16,7 @@
                                         <th>Full name</th>
                                         <th>Email</th>
                                         <th>Phone</th>
-                                        <th>job</th>
+                                        <th>job ID</th>
                                     
                                     </tr>
                                 </thead>

@@ -52,6 +52,7 @@ class RegisterController extends Controller
             'name' => [
                 'required', 
                 'regex:/^[a-zA-Zء-ي\s]+$/u', 
+                'unique:users',
                 'max:255'
             ], 
             'email' => [
@@ -73,20 +74,19 @@ class RegisterController extends Controller
                 'required', 
                 'regex:/^\+963\d{8,9}$|^\+\d{1,3}\d{8,12}$/'
             ], 
-            'age' => [
-                'required', 
-                'integer', 
-                'between:20,60'
-            ], 
+           
             'job' => [  // إضافة شرط حقل job هنا
                 'required',
+                'unique:users',
+                'integer', 
                 'regex:/^\d{9}$/'
             ],
         ], [
             'name.required' => 'The name is required.',
             'name.regex' => 'The name must contain only letters and spaces.',
             'name.max' => 'The name must not exceed 255 characters.',
-            
+            'name.unique' => 'This user name  is already in use.',
+
             'email.required' => 'The email address is required.',
             'email.string' => 'The email address must be a valid string.',
             'email.email' => 'The email address must be a valid email format.',
@@ -103,13 +103,11 @@ class RegisterController extends Controller
             'phone.required' => 'The phone number is required.',
             'phone.regex' => 'The phone number must be in a valid format starting with + followed by the country code and the correct number.',
             
-            'age.required' => 'The age is required.',
-            'age.integer' => 'The age must be an integer.',
-            'age.between' => 'The age must be between 20 and 60 years.',
-
-               
+        
             'job.required' => 'The job ID is required.',
-            'job.regex' => 'The job ID must be exactly 9 digits.'
+            'job.regex' => 'The job ID must be exactly 9 digits.',
+            'job.unique' => 'This job id is already in use.',
+
         ]);
         
     }
@@ -125,7 +123,6 @@ class RegisterController extends Controller
         return User::create([
             'name' => $data['name'],
             'email' => $data['email'],
-            'age' => $data['age'],
             'phone' => $data['phone'],
             'job' => $data['job'],
             'role' => 'manger',

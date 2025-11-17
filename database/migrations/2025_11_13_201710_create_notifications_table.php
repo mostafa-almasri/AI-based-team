@@ -11,15 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('users', function (Blueprint $table) {
+        Schema::create('notifications', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->string('email')->unique();
-            $table->string('phone')->nullable();
-            $table->integer('job')->unique();
-            $table->string('role');
-            $table->string('password');
-            $table->rememberToken();
+            $table->foreignId('user_id')->constrained('users')->onDelete('cascade'); // لمن هذا الإشعار؟
+            $table->string('message'); // نص الإشعار
+            $table->boolean('is_read')->default(false); // هل تمت قراءته؟
             $table->timestamps();
         });
     }
@@ -29,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('users');
+        Schema::dropIfExists('notifications');
     }
 };

@@ -17,7 +17,6 @@
                             <table class="table table-hover">
                                 <thead>
                                     <tr>
-                                        <th>Team name</th>
                                         <th>Project name</th>
                                         <th>Project goal</th>
                                         <th>Deadline</th>
@@ -26,22 +25,40 @@
                                     </tr>
                                 </thead>
                                 <tbody>
+                                @foreach($group as $row)
                                     <tr>
-                                        <td>team1</td>
-                                        <td>project1</td>
-                                        <td>java</td>
-                                        <td>12/3/2026</td>
+                                        <td>{{$row->project_name}}</td>
+                                        <td>{{$row->project_field}}</td>
+                                        <td>{{$row->time_frame}}</td>
                                         <td>
-                                            
-                                       java
+                                            <?php
+                                                // فك التشفير الأول (لإزالة علامات الاقتباس الخارجية)
+                                                $decoded_once = json_decode($row->project_skill, true);
+
+                                                // التحقق مما إذا كانت النتيجة سلسلة نصية JSON
+                                                if (is_string($decoded_once)) {
+                                                    // فك التشفير الثاني للحصول على مصفوفة فعلية
+                                                    $skills = json_decode($decoded_once, true);
+                                                } else {
+                                                    $skills = $decoded_once;
+                                                }
+
+                                                // التحقق مما إذا كانت البيانات مصفوفة وعرضها
+                                                if (is_array($skills)) {
+                                                    echo implode(', ', $skills);
+                                                } else {
+                                                    echo "No skills assigned";
+                                                }
+                                            ?>
                                         </td>
 
                                                                           
                                         </td>
                                       
-                                        <td><a href="" class="btn btn-info">Show</a></td>
+                                        <td><a href="{{route('member.table.team', ['id'=>$row->id])}}" class="btn btn-info">Show</a></td>
 
                                     </tr>
+                                    @endforeach
                         
                                
                                 </tbody>

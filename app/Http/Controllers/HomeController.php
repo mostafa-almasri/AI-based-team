@@ -1,19 +1,20 @@
 <?php
 
 namespace App\Http\Controllers;
-
 use App\Models\Chat;
+use App\Models\Task;
 use App\Models\Team;
 use App\Models\User;
 use App\Models\Skill;
 use App\Models\Member;
+use App\Models\Document;
 use App\Models\Availability;
+use App\Models\Notification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Http;
 
 class HomeController extends Controller
 {
@@ -54,7 +55,9 @@ class HomeController extends Controller
                     ->groupBy('sender_id')
                     ->get()
                     ->keyBy('sender_id');
-                return view('manger.hom' , compact('user' ,'unreadMessagesCount' , 'unreadMessages') );
+                $teams = Team::with('tasks')->where('manger_id', auth()->id())->get();
+             
+                return view('manger.hom' , compact('teams','user' ,'unreadMessagesCount' , 'unreadMessages') );
             }  
             elseif ($type == 'member')
             {
@@ -73,13 +76,14 @@ class HomeController extends Controller
                     ->groupBy('sender_id')
                     ->get()
                     ->keyBy('sender_id');
-                return view('member.home' , compact('user' ,'unreadMessagesCount' , 'unreadMessages') );
+                $notifications = Notification::where('user_id', Auth::id())->orderBy('created_at', 'desc')->get();
+                $task = Task::where('member_id', Auth::user()->id) ->get();
+                return view('member.hom' , compact('task','notifications' ,'user' ,'unreadMessagesCount' , 'unreadMessages') );
 
             }
             elseif ($type == 'admin') 
             {
                 return view('admin.home' );
-
             }
         }
     }
@@ -114,43 +118,23 @@ class HomeController extends Controller
                 'string', 
                 'email', 
                 'max:255', 
-                'regex:/^[a-zA-Z0-9._%+-]+@(gmail\.com|yahoo\.com|outlook\.com)$/'
-            ], 
-            'password' => [ 
-                'string',   
-                'min:8',
-                'confirmed', 
-                'regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]+$/'
+                'regex:/^[a-zA-Z0-9._%+-]+@(gmail\.com|yahoo\.com|outlook\.com)$/',
             ], 
             'phone' => [
-                'regex:/^\+963\d{8,9}$|^\+\d{1,3}\d{8,12}$/'
+                'regex:/^\+963\d{8,9}$|^\+\d{1,3}\d{8,12}$/',
             ], 
-            'age' => [
+                 'job' => [ 
                 'integer', 
-                'between:20,60'
-            ],     'job' => [  // إضافة شرط حقل job هنا
-                'regex:/^\d{9}$/'
+                'regex:/^\d{9}$/',
             ],
         ], [
             'name.regex' => 'The name must contain only letters and spaces.',
             'name.max' => 'The name must not exceed 255 characters.',
-            
             'email.string' => 'The email address must be a valid string.',
             'email.email' => 'The email address must be a valid email format.',
             'email.max' => 'The email address must not exceed 255 characters.',
             'email.regex' => 'The email must be from one of the following domains: gmail.com, yahoo.com, or outlook.com.',
-            
-            'password.string' => 'The password must be a string.',
-            'password.min' => 'The password must be at least 8 characters long.',
-            'password.confirmed' => 'The password confirmation does not match.',
-            'password.regex' => 'The password must contain at least one lowercase letter, one uppercase letter, one number, and one special character (@$!%*?&).',
-            
             'phone.regex' => 'The phone number must be in a valid format starting with + followed by the country code and the correct number.',
-            
-            'age.integer' => 'The age must be an integer.',
-            'age.between' => 'The age must be between 20 and 60 years.',
-            
-               
             'job.regex' => 'The job ID must be exactly 9 digits.'
         ]);
         $id = Auth::user()->id ;
@@ -158,8 +142,6 @@ class HomeController extends Controller
         $user -> name = $request->input('name') ;
         $user -> email = $request->input('email') ;
         $user -> phone = $request->input('phone') ;
-        $user -> age = $request->input('age') ;
-        $user -> job = $request->input('job') ;
         $user->update();
         return redirect()-> back()     ->with('status', 'Updated done');
     }
@@ -169,80 +151,71 @@ class HomeController extends Controller
        return view('admin.user.add');
     }
 
-    public function store_manger(Request $request )
+    public function store_manger(Request $request)
     {
         $request->validate([
             'name' => [
                 'required', 
                 'regex:/^[a-zA-Zء-ي\s]+$/u', 
-                'max:255'
+                'unique:users',
+                'max:255',
             ], 
             'email' => [
                 'required', 
                 'string', 
                 'email', 
                 'max:255', 
-                'regex:/^[a-zA-Z0-9._%+-]+@(gmail\.com|yahoo\.com|outlook\.com)$/'
+                'unique:users',
+                'regex:/^[a-zA-Z0-9._%+-]+@(gmail\.com|yahoo\.com|outlook\.com)$/',
             ], 
             'password' => [ 
                 'required',  
                 'string',   
                 'min:8',
                 'confirmed', 
-                'regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]+$/'
+                'regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]+$/',
             ], 
             'phone' => [
                 'required', 
-                'regex:/^\+963\d{8,9}$|^\+\d{1,3}\d{8,12}$/'
+                'regex:/^\+963\d{8,9}$|^\+\d{1,3}\d{8,12}$/',
             ], 
-            'age' => [
-                'required', 
-                'integer', 
-                'between:20,60'
-            ],     'job' => [  // إضافة شرط حقل job هنا
+              'job' => [ 
                 'required',
-                'regex:/^\d{9}$/'
+                'integer', 
+                'unique:users',
+                'regex:/^\d{9}$/',
             ],
         ], [
             'name.required' => 'The name is required.',
             'name.regex' => 'The name must contain only letters and spaces.',
             'name.max' => 'The name must not exceed 255 characters.',
-            
+            'name.unique' => 'This user name  is already in use.',
             'email.required' => 'The email address is required.',
             'email.string' => 'The email address must be a valid string.',
             'email.email' => 'The email address must be a valid email format.',
             'email.max' => 'The email address must not exceed 255 characters.',
             'email.regex' => 'The email must be from one of the following domains: gmail.com, yahoo.com, or outlook.com.',
-            
+            'email.unique' => 'This email address  is already in use.',
             'password.required' => 'The password is required.',
             'password.string' => 'The password must be a string.',
             'password.min' => 'The password must be at least 8 characters long.',
             'password.confirmed' => 'The password confirmation does not match.',
             'password.regex' => 'The password must contain at least one lowercase letter, one uppercase letter, one number, and one special character (@$!%*?&).',
-            
             'phone.required' => 'The phone number is required.',
             'phone.regex' => 'The phone number must be in a valid format starting with + followed by the country code and the correct number.',
-            
-            'age.required' => 'The age is required.',
-            'age.integer' => 'The age must be an integer.',
-            'age.between' => 'The age must be between 20 and 60 years.',
-            
-               
             'job.required' => 'The job ID is required.',
-            'job.regex' => 'The job ID must be exactly 9 digits.'
+            'job.regex' => 'The job ID must be exactly 9 digits.' ,
+            'job.unique' => 'This job id  is already in use.'
         ]);
-     
         $user=new User();
         $user -> name = $request->input('name') ;
         $user -> email = $request->input('email') ;
         $user -> phone = $request->input('phone') ;
-        $user -> age = $request->input('age') ;
         $user -> role = 'manger' ;
         $user -> job = $request->input('job') ;
         $user -> password =Hash::make($request->input('password'));
         $user->save();
         return redirect()-> back()     ->with('status', 'Added Done' ) ;
- 
     } 
     public function show_member()
     {
@@ -252,6 +225,7 @@ class HomeController extends Controller
             ->where('members.manger_id', Auth::user()->id) // البحث عن الفرق التي ينتمي لها المستخدم
             ->where('users.role' , 'member')
             ->select('users.*' , 'availabilities.is_available') // استخراج بيانات المدراء فقط
+            ->distinct()
             ->get();
         $unreadMessages = Chat::select('sender_id', DB::raw('count(*) as unread_count'))
             ->where('receiver_id', auth()->id())
@@ -262,8 +236,35 @@ class HomeController extends Controller
         $unreadMessagesCount = Chat::where('receiver_id', auth()->id())
             ->where('is_read', 0)
             ->count();
-        return view('manger.member.table' , compact( 'user' ,'unreadMessagesCount' , 'unreadMessages'));
+        return view('manger.member.table' , compact( 'user' , 'unreadMessagesCount' , 'unreadMessages'));
+    }
 
+    public function progress_task()
+    {
+        $user=DB::table('users')
+            ->join('members', 'users.id', '=', 'members.member_id') // جلب بيانات الفريق
+            ->join('availabilities', 'users.id', '=', 'availabilities.user_id') // جلب  توفر العضو
+            ->where('members.manger_id', Auth::user()->id) // البحث عن الفرق التي ينتمي لها المستخدم
+            ->where('users.role' , 'member')
+            ->select('users.*' , 'availabilities.is_available') // استخراج بيانات المدراء فقط
+            ->distinct()
+            ->get();
+        $unreadMessages = Chat::select('sender_id', DB::raw('count(*) as unread_count'))
+            ->where('receiver_id', auth()->id())
+            ->where('is_read', 0)
+            ->groupBy('sender_id')
+            ->get()
+            ->keyBy('sender_id');
+        $unreadMessagesCount = Chat::where('receiver_id', auth()->id())
+            ->where('is_read', 0)
+            ->count();
+            $task = DB::table('tasks')
+            ->join('teams', 'teams.id', '=', 'tasks.team_id') // جلب بيانات الفريق
+            ->join('users', 'users.id', '=', 'tasks.member_id') // جلب بيانات الفريق
+            ->where('teams.manger_id', Auth::user()->id) // البحث عن الفرق التي ينتمي لها المستخدم
+            ->select('tasks.*' , 'users.*' , 'teams.*') 
+            ->get();
+        return view('manger.group.progress-task' , compact('task' , 'user' , 'unreadMessagesCount' , 'unreadMessages'));
     }
 
     public function delete_member($id)
@@ -305,19 +306,11 @@ class HomeController extends Controller
                 'max:255', 
                 'regex:/^[a-zA-Z0-9._%+-]+@(gmail\.com|yahoo\.com|outlook\.com)$/'
             ], 
-            'password' => [ 
-                'string',   
-                'min:8',
-                'confirmed', 
-                'regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]+$/'
-            ], 
+
             'phone' => [
                 'regex:/^\+963\d{8,9}$|^\+\d{1,3}\d{8,12}$/'
             ], 
-            'age' => [
-                'integer', 
-                'between:20,60'
-            ],
+   
         ], [
             'name.regex' => 'The name must contain only letters and spaces.',
             'name.max' => 'The name must not exceed 255 characters.',
@@ -326,26 +319,15 @@ class HomeController extends Controller
             'email.email' => 'The email address must be a valid email format.',
             'email.max' => 'The email address must not exceed 255 characters.',
             'email.regex' => 'The email must be from one of the following domains: gmail.com, yahoo.com, or outlook.com.',
-            
-            'password.string' => 'The password must be a string.',
-            'password.min' => 'The password must be at least 8 characters long.',
-            'password.confirmed' => 'The password confirmation does not match.',
-            'password.regex' => 'The password must contain at least one lowercase letter, one uppercase letter, one number, and one special character (@$!%*?&).',
-            
+
             'phone.regex' => 'The phone number must be in a valid format starting with + followed by the country code and the correct number.',
-            
-            'age.integer' => 'The age must be an integer.',
-            'age.between' => 'The age must be between 20 and 60 years.',
-            
-               
+         
         ]);
         $id = Auth::user()->id ;
         $user=User::find($id);
         $user -> name = $request->input('name') ;
         $user -> email = $request->input('email') ;
         $user -> phone = $request->input('phone') ;
-        $user -> age = $request->input('age') ;
-        $user -> job = $request->input('job') ;
         $user->update();
         return redirect()-> back()     ->with('status', 'Updated done');
     }
@@ -374,7 +356,9 @@ class HomeController extends Controller
             'name' => [
                 'required', 
                 'regex:/^[a-zA-Zء-ي\s]+$/u', 
-                'max:255'
+                'max:255', 
+                'unique:users',
+
             ], 
             'email' => [
                 'required', 
@@ -395,20 +379,20 @@ class HomeController extends Controller
                 'required', 
                 'regex:/^\+963\d{8,9}$|^\+\d{1,3}\d{8,12}$/'
             ], 
-            'age' => [
-                'required', 
-                'integer', 
-                'between:20,60'
-            ], 
-            'job' => [  // إضافة شرط حقل job هنا
+   
+            'job' => [ 
                 'required',
-                'regex:/^\d{9}$/'
+                'integer',
+                'regex:/^\d{9}$/',
+                'unique:users',
+
             ],
         ], [
             'name.required' => 'The name is required.',
             'name.regex' => 'The name must contain only letters and spaces.',
             'name.max' => 'The name must not exceed 255 characters.',
-            
+            'name.unique' => 'This user name is already in use.',
+
             'email.required' => 'The email address is required.',
             'email.string' => 'The email address must be a valid string.',
             'email.email' => 'The email address must be a valid email format.',
@@ -425,19 +409,15 @@ class HomeController extends Controller
             'phone.required' => 'The phone number is required.',
             'phone.regex' => 'The phone number must be in a valid format starting with + followed by the country code and the correct number.',
             
-            'age.required' => 'The age is required.',
-            'age.integer' => 'The age must be an integer.',
-            'age.between' => 'The age must be between 20 and 60 years.',
-
-                    
             'job.required' => 'The job ID is required.',
-            'job.regex' => 'The job ID must be exactly 9 digits.'
+            'job.regex' => 'The job ID must be exactly 9 digits.' ,
+            'job.unique' => 'This job id is already in use.',
+
         ]);
         $user=new User();
         $user -> name = $request->input('name') ;
         $user -> email = $request->input('email') ;
         $user -> phone = $request->input('phone') ;
-        $user -> age = $request->input('age') ;
         $user -> role = 'member' ;
         $user -> job = $request->input('job') ;
         $user -> password =Hash::make($request->input('password'));
@@ -474,21 +454,22 @@ class HomeController extends Controller
             ->groupBy('sender_id')
             ->get()
             ->keyBy('sender_id');
+            $notifications = Notification::where('user_id', Auth::id())->orderBy('created_at', 'desc')->get();
 
-        return view('member.profile'  , compact('user','unreadMessagesCount' , 'unreadMessages') );
+        return view('member.profile'  , compact('notifications' ,'user','unreadMessagesCount' , 'unreadMessages') );
     }
     public function update_member(Request $request )
     {
         $request->validate([
             'name' => [
                 'regex:/^[a-zA-Zء-ي\s]+$/u', 
-                'max:255'
+                'max:255' ,
+
             ], 
             'email' => [
                 'string', 
                 'email', 
                 'max:255', 
-                'unique:users',
                 'regex:/^[a-zA-Z0-9._%+-]+@(gmail\.com|yahoo\.com|outlook\.com)$/'
             ], 
             'password' => [ 
@@ -500,30 +481,18 @@ class HomeController extends Controller
             'phone' => [
                 'regex:/^\+963\d{8,9}$|^\+\d{1,3}\d{8,12}$/'
             ], 
-            'age' => [
-                'integer', 
-                'between:20,60'
-            ], 
-     
         ], [
             'name.regex' => 'The name must contain only letters and spaces.',
             'name.max' => 'The name must not exceed 255 characters.',
-            
             'email.string' => 'The email address must be a valid string.',
             'email.email' => 'The email address must be a valid email format.',
             'email.max' => 'The email address must not exceed 255 characters.',
-            'email.unique' => 'This email address is already in use.',
             'email.regex' => 'The email must be from one of the following domains: gmail.com, yahoo.com, or outlook.com.',
-            
             'password.string' => 'The password must be a string.',
             'password.min' => 'The password must be at least 8 characters long.',
             'password.confirmed' => 'The password confirmation does not match.',
             'password.regex' => 'The password must contain at least one lowercase letter, one uppercase letter, one number, and one special character (@$!%*?&).',
-            
             'phone.regex' => 'The phone number must be in a valid format starting with + followed by the country code and the correct number.',
-            
-            'age.integer' => 'The age must be an integer.',
-            'age.between' => 'The age must be between 20 and 60 years.',
         ]);
      
         $id = Auth::user()->id ;
@@ -531,8 +500,6 @@ class HomeController extends Controller
         $user -> name = $request->input('name') ;
         $user -> email = $request->input('email') ;
         $user -> phone = $request->input('phone') ;
-        $user -> age = $request->input('age') ;
-        $user -> job = $request->input('job') ;
         $user->update();
         return redirect()-> back()     ->with('status', 'Updated done');
     }
@@ -554,8 +521,9 @@ class HomeController extends Controller
             ->groupBy('sender_id')
             ->get()
             ->keyBy('sender_id');
+            $notifications = Notification::where('user_id', Auth::id())->orderBy('created_at', 'desc')->get();
 
-        return view('member.skill.table' , compact('skill' , 'user','unreadMessagesCount' , 'unreadMessages') );
+        return view('member.skill.table' , compact('notifications' ,'skill' , 'user','unreadMessagesCount' , 'unreadMessages') );
 
     }
     public function delete_skill($id)
@@ -582,7 +550,9 @@ class HomeController extends Controller
             ->groupBy('sender_id')
             ->get()
             ->keyBy('sender_id');
-        return view('member.skill.add' , compact('user','unreadMessagesCount' , 'unreadMessages') );
+            $notifications = Notification::where('user_id', Auth::id())->orderBy('created_at', 'desc')->get();
+
+        return view('member.skill.add' , compact('notifications' ,'user','unreadMessagesCount' , 'unreadMessages') );
 
     }
     public function store_skill(Request $request )
@@ -617,7 +587,9 @@ class HomeController extends Controller
             ->groupBy('sender_id')
             ->get()
             ->keyBy('sender_id');
-        return view('member.skill.edit' , compact('skill' , 'user','unreadMessagesCount' , 'unreadMessages') );
+            $notifications = Notification::where('user_id', Auth::id())->orderBy('created_at', 'desc')->get();
+
+        return view('member.skill.edit' , compact('notifications' ,'skill' , 'user','unreadMessagesCount' , 'unreadMessages') );
 
     }
 
@@ -659,7 +631,9 @@ class HomeController extends Controller
             ->groupBy('sender_id')
             ->get()
             ->keyBy('sender_id');
-        return view('member.chat' , compact('user' , 'receive' , 'id' , 'messages' ,'unreadMessagesCount' , 'unreadMessages') );
+           $notifications = Notification::where('user_id', Auth::id())->orderBy('created_at', 'desc')->get();
+
+        return view('member.chat' , compact('notifications' , 'user' , 'receive' , 'id' , 'messages' ,'unreadMessagesCount' , 'unreadMessages') );
     }
     public function chat_member($id)
     {
@@ -673,22 +647,21 @@ class HomeController extends Controller
             $query->where('sender_id', $id)
                   ->where('receiver_id', Auth::user()->id);
         })->get();
-    $user = DB::table('users')
-                    ->join('members', 'members.manger_id', '=', 'users.id') // جلب بيانات الفريق
-                    ->where('members.member_id' , Auth::user()->id)
-                    ->select('users.*') // استخراج بيانات المدراء فقط
-                    ->distinct() // تجنب التكرار في حالة تعدد المهام
-                    ->get();
-        $unreadMessages = Chat::select('sender_id', DB::raw('count(*) as unread_count'))
-            ->where('receiver_id', auth()->id())
-            ->where('is_read', 0)
-            ->groupBy('sender_id')
-            ->get()
-            ->keyBy('sender_id');
-        $unreadMessagesCount = Chat::where('receiver_id', auth()->id())
-            ->where('is_read', 0)
-            ->count();
-
+        $user=DB::table('users')
+        ->join('members', 'users.id', '=', 'members.member_id') // جلب بيانات الفريق
+        ->where('members.manger_id', Auth::user()->id) // البحث عن الفرق التي ينتمي لها المستخدم
+        ->where('users.role' , 'member')
+        ->select('users.*') // استخراج بيانات المدراء فقط
+        ->get();
+    $unreadMessagesCount = Chat::where('receiver_id', auth()->id())
+        ->where('is_read', 0)
+        ->count();
+    $unreadMessages = Chat::select('sender_id', DB::raw('count(*) as unread_count'))
+        ->where('receiver_id', auth()->id())
+        ->where('is_read', 0)
+        ->groupBy('sender_id')
+        ->get()
+        ->keyBy('sender_id');
         return view('manger.chat' , compact( 'user' , 'receive' , 'id' , 'messages','unreadMessagesCount' , 'unreadMessages') );
     }
 
@@ -736,4 +709,422 @@ class HomeController extends Controller
         ]);
     }
     
+
+    
+    public function show_group()
+    {
+        $group = Team::where('manger_id' , Auth::user()->id)->get();
+        $user=DB::table('users')
+        ->join('members', 'users.id', '=', 'members.member_id') // جلب بيانات الفريق
+        ->where('members.manger_id', Auth::user()->id) // البحث عن الفرق التي ينتمي لها المستخدم
+        ->where('users.role' , 'member')
+        ->select('users.*') // استخراج بيانات المدراء فقط
+        ->get();
+    $unreadMessagesCount = Chat::where('receiver_id', auth()->id())
+        ->where('is_read', 0)
+        ->count();
+    $unreadMessages = Chat::select('sender_id', DB::raw('count(*) as unread_count'))
+        ->where('receiver_id', auth()->id())
+        ->where('is_read', 0)
+        ->groupBy('sender_id')
+        ->get()
+        ->keyBy('sender_id');
+        return view('manger.group.table-group' , compact('group' , 'user' ,'unreadMessagesCount' , 'unreadMessages') );
+
+    }
+    public function delete_group($id)
+    {
+        $group = Team::where('id' , $id)->first();
+        $group->delete();
+        return redirect()-> back() -> with('status', ' Deleted Done ');
+    }
+  
+    public function add_group()
+    {
+        $user=DB::table('users')
+        ->join('members', 'users.id', '=', 'members.member_id') // جلب بيانات الفريق
+        ->where('members.manger_id', Auth::user()->id) // البحث عن الفرق التي ينتمي لها المستخدم
+        ->where('users.role' , 'member')
+        ->select('users.*') // استخراج بيانات المدراء فقط
+        ->get();
+    $unreadMessagesCount = Chat::where('receiver_id', auth()->id())
+        ->where('is_read', 0)
+        ->count();
+    $unreadMessages = Chat::select('sender_id', DB::raw('count(*) as unread_count'))
+        ->where('receiver_id', auth()->id())
+        ->where('is_read', 0)
+        ->groupBy('sender_id')
+        ->get()
+        ->keyBy('sender_id');
+        return view('manger.group.add-group' , compact('user','unreadMessagesCount' , 'unreadMessages'));
+
+    }
+
+    
+    public function store_group(Request $request)
+    {
+        // ✅ 1️⃣ التحقق من البيانات المدخلة
+        $validated = $request->validate([
+            'project_name' => ['required', 'string', 'max:255'],
+            'project_field' => ['required', 'string'],
+            'time_frame' => ['required'],
+            'count_team' => ['required', 'integer', 'min:1'],
+            'skills' => ['required', 'array', 'min:1'], // ✅ تأكيد أن المهارات ليست فارغة
+        ]);
+        // إذا كان time_frame هو عدد الأيام
+        $end_date = now()->addDays($validated['time_frame']);
+
+    
+        // ✅ 2️⃣ إنشاء المشروع وتخزين البيانات في قاعدة البيانات
+        $team = new Team();
+        $team->project_name = $validated['project_name'];
+        $team->project_field = $validated['project_field'];
+        $team->count_team = $validated['count_team'];
+        $team->project_skill = json_encode($validated['skills']);
+        $team->time_frame = $validated['time_frame'];
+        $team->manger_id = Auth::user()->id;
+        $team->save();
+
+        return redirect()-> route('manger.show.group')->with('status', 'Project created successfully!');
+    }
+    
+    public function edit_group($id)
+    {
+        $group = Team::find($id);
+        $user=DB::table('users')
+        ->join('members', 'users.id', '=', 'members.member_id') // جلب بيانات الفريق
+        ->where('members.manger_id', Auth::user()->id) // البحث عن الفرق التي ينتمي لها المستخدم
+        ->where('users.role' , 'member')
+        ->select('users.*') // استخراج بيانات المدراء فقط
+        ->get();
+    $unreadMessagesCount = Chat::where('receiver_id', auth()->id())
+        ->where('is_read', 0)
+        ->count();
+    $unreadMessages = Chat::select('sender_id', DB::raw('count(*) as unread_count'))
+        ->where('receiver_id', auth()->id())
+        ->where('is_read', 0)
+        ->groupBy('sender_id')
+        ->get()
+        ->keyBy('sender_id');
+
+        return view('manger.group.edit-group' , compact('group' , 'user','unreadMessagesCount' , 'unreadMessages') );
+
+    }
+
+    public function update_group(Request $request )
+    {
+        $validated = $request->validate([
+            'skills' => 'required|array|min:1', // التأكد من أن المهارات ليست فارغة
+        ]);
+        $id = $request->input('id');
+        $team= Team::find($id);
+        $team -> project_name = $request->input('project_name') ;
+        $team -> project_field = $request->input('project_field') ;
+        $team -> count_team = $request->input('count_team') ;
+        $team->project_skill = json_encode($validated['skills']); 
+        $team -> time_frame = $request->input('time_frame') ;
+        $team->update();
+        return redirect()-> route('manger.show.group')     ->with('status', 'update Done' ) ;
+ 
+    } 
+  
+
+    public function show_my_team($id)
+    {
+        $member = DB::table('users')
+        ->join('tasks', 'users.id', '=', 'tasks.member_id')
+        ->where('tasks.team_id', $id)
+        ->select('users.*')
+        ->distinct() // تجنب التكرار
+        ->get();
+         $user=DB::table('users')
+        ->join('members', 'users.id', '=', 'members.member_id') // جلب بيانات الفريق
+        ->where('members.manger_id', Auth::user()->id) // البحث عن الفرق التي ينتمي لها المستخدم
+        ->where('users.role' , 'member')
+        ->select('users.*') // استخراج بيانات المدراء فقط
+        ->get();
+        $unreadMessages = Chat::select('sender_id', DB::raw('count(*) as unread_count'))
+        ->where('receiver_id', auth()->id())
+        ->where('is_read', 0)
+        ->groupBy('sender_id')
+        ->get()
+        ->keyBy('sender_id');
+        $unreadMessagesCount = Chat::where('receiver_id', auth()->id())
+        ->where('is_read', 0)
+        ->count();
+        return view('manger.group.table-team' , compact('member' , 'user','unreadMessagesCount' , 'unreadMessages') );
+    }
+    public function add_task($id)
+    {
+        $team = Team::find($id);
+        $member=DB::table('users')
+        ->join('members', 'users.id', '=', 'members.member_id') // جلب بيانات الفريق
+        ->join('availabilities', 'users.id', '=', 'availabilities.user_id') // جلب  توفر العضو
+        ->where('members.manger_id', Auth::user()->id) // البحث عن الفرق التي ينتمي لها المستخدم
+        ->where('users.role' , 'member')
+        ->select('users.*' , 'availabilities.is_available') // استخراج بيانات المدراء فقط
+        ->distinct()
+        ->get();
+         $user=DB::table('users')
+        ->join('members', 'users.id', '=', 'members.member_id') // جلب بيانات الفريق
+        ->where('members.manger_id', Auth::user()->id) // البحث عن الفرق التي ينتمي لها المستخدم
+        ->where('users.role' , 'member')
+        ->select('users.*') // استخراج بيانات المدراء فقط
+        ->get();
+        $unreadMessages = Chat::select('sender_id', DB::raw('count(*) as unread_count'))
+        ->where('receiver_id', auth()->id())
+        ->where('is_read', 0)
+        ->groupBy('sender_id')
+        ->get()
+        ->keyBy('sender_id');
+        $unreadMessagesCount = Chat::where('receiver_id', auth()->id())
+        ->where('is_read', 0)
+        ->count();
+        return view('manger.group.add-task' , compact('team' , 'member' , 'user','unreadMessagesCount' , 'unreadMessages') );
+    }
+  
+    public function show_task($id)
+    {
+        $task = Task::where('team_id' , $id)->
+        with(['document', 'member' , 'team'])->get();
+         $user=DB::table('users')
+        ->join('members', 'users.id', '=', 'members.member_id') // جلب بيانات الفريق
+        ->where('members.manger_id', Auth::user()->id) // البحث عن الفرق التي ينتمي لها المستخدم
+        ->where('users.role' , 'member')
+        ->select('users.*') // استخراج بيانات المدراء فقط
+        ->get();
+        $unreadMessages = Chat::select('sender_id', DB::raw('count(*) as unread_count'))
+        ->where('receiver_id', auth()->id())
+        ->where('is_read', 0)
+        ->groupBy('sender_id')
+        ->get()
+        ->keyBy('sender_id');
+        $unreadMessagesCount = Chat::where('receiver_id', auth()->id())
+        ->where('is_read', 0)
+        ->count();
+        return view('manger.group.table-task' , compact('task' , 'user','unreadMessagesCount' , 'unreadMessages') );
+    }
+    public function store_task(Request $request )
+    {
+        $finish_date = $request->input('finish_date') ;
+        $start_date = $request->input('start_date') ;
+
+        $id = $request->input('team');
+        $team= Team::find($id);
+        $task = new Task();
+        $task -> member_id = $request->input('member') ;
+        $task -> team_id = $team->id ;
+        $task -> task_name = $request->input('name') ;
+        $task -> start_date = $start_date;
+        $task -> finish_date = $finish_date ;
+        $task -> task_duration =   \Carbon\Carbon::parse($finish_date)->diffInDays(\Carbon\Carbon::parse($start_date));
+        $task->save();
+        Notification::create([
+            'user_id' => $task['member_id'],
+            'message' => "📌 Task Assigned: '{$task->task_name}' in '{$team->project_name}' from {$task->start_date} to {$task->finish_date} "
+        ]);
+            
+        return redirect()-> route('manger.show.group')     ->with('status', 'add task successfully!' ) ;
+ 
+    }
+    public function edit_task($id)
+    {
+        $task = Task::where('id' , $id)->
+        with(['document', 'member' , 'team'])->first();
+        $user=DB::table('users')
+        ->join('members', 'users.id', '=', 'members.member_id') // جلب بيانات الفريق
+        ->where('members.manger_id', Auth::user()->id) // البحث عن الفرق التي ينتمي لها المستخدم
+        ->where('users.role' , 'member')
+        ->select('users.*') // استخراج بيانات المدراء فقط
+        ->get();
+        $unreadMessages = Chat::select('sender_id', DB::raw('count(*) as unread_count'))
+        ->where('receiver_id', auth()->id())
+        ->where('is_read', 0)
+        ->groupBy('sender_id')
+        ->get()
+        ->keyBy('sender_id');
+        $unreadMessagesCount = Chat::where('receiver_id', auth()->id())
+        ->where('is_read', 0)
+        ->count();
+
+        return view('manger.group.edit-task' , compact('task' , 'user','unreadMessagesCount' , 'unreadMessages') );
+    }
+
+    public function update_task(Request $request )
+    {
+     
+        $id = $request->input('id');
+        $task= Task::find($id);
+        $task -> member_id = $request->input('member') ;
+    
+        $task->update();
+        return redirect()-> route('manger.show.group')     ->with('status', 'update Done' ) ;
+ 
+    }
+
+    public function show_my_group()
+    {
+        $group = DB::table('tasks')
+        ->join('teams', 'teams.id', '=', 'tasks.team_id')
+        ->join('users', 'users.id', '=', 'tasks.member_id')
+        ->where('tasks.member_id', Auth::user()->id)
+        ->select( 'teams.*')
+        ->distinct()
+        ->get();
+        $user = DB::table('tasks')
+        ->join('teams', 'teams.id', '=', 'tasks.team_id') // جلب بيانات الفريق
+        ->join('users as managers', 'managers.id', '=', 'teams.manger_id') // جلب بيانات المدير
+        ->where('tasks.member_id', Auth::user()->id) // البحث عن الفرق التي ينتمي لها المستخدم
+        ->select('managers.*') // استخراج بيانات المدراء فقط
+        ->distinct() // تجنب التكرار في حالة تعدد المهام
+        ->get();
+        $unreadMessagesCount = Chat::where('receiver_id', auth()->id())
+                                ->where('is_read', 0)
+                                ->count();
+        $unreadMessages = Chat::select('sender_id', DB::raw('count(*) as unread_count'))
+            ->where('receiver_id', auth()->id())
+            ->where('is_read', 0)
+            ->groupBy('sender_id')
+            ->get()
+            ->keyBy('sender_id');
+        $notifications = Notification::where('user_id', Auth::id())->orderBy('created_at', 'desc')->get();
+        return view('member.group.table' , compact('notifications' ,'group' , 'user' ,'unreadMessagesCount' , 'unreadMessages') );
+    }
+    public function show_team($id)
+    {
+        $member = DB::table('users')
+        ->join('tasks', 'users.id', '=', 'tasks.member_id')
+        ->where('tasks.team_id', $id)
+        ->select('users.*')
+        ->distinct()
+        ->get();
+        $user = DB::table('tasks')
+        ->join('teams', 'teams.id', '=', 'tasks.team_id') // جلب بيانات الفريق
+        ->join('users as managers', 'managers.id', '=', 'teams.manger_id') // جلب بيانات المدير
+        ->where('tasks.member_id', Auth::user()->id) // البحث عن الفرق التي ينتمي لها المستخدم
+        ->select('managers.*') // استخراج بيانات المدراء فقط
+        ->distinct() // تجنب التكرار في حالة تعدد المهام
+        ->get();
+        $unreadMessagesCount = Chat::where('receiver_id', auth()->id())
+                            ->where('is_read', 0)
+                            ->count();
+        $unreadMessages = Chat::select('sender_id', DB::raw('count(*) as unread_count'))
+        ->where('receiver_id', auth()->id())
+        ->where('is_read', 0)
+        ->groupBy('sender_id')
+        ->get()
+        ->keyBy('sender_id');
+        $notifications = Notification::where('user_id', Auth::id())->orderBy('created_at', 'desc')->get();
+
+        return view('member.group.team' , compact('notifications' , 'member' , 'user' ,'unreadMessagesCount' , 'unreadMessages') );
+    }
+    public function show_my_task()
+    {
+        $task = Task::where('member_id' , Auth::user()->id)->
+        with(['document', 'member' , 'team'])->get();
+
+        $user = DB::table('tasks')
+        ->join('teams', 'teams.id', '=', 'tasks.team_id') // جلب بيانات الفريق
+        ->join('users as managers', 'managers.id', '=', 'teams.manger_id') // جلب بيانات المدير
+        ->where('tasks.member_id', Auth::user()->id) // البحث عن الفرق التي ينتمي لها المستخدم
+        ->select('managers.*') // استخراج بيانات المدراء فقط
+        ->distinct() // تجنب التكرار في حالة تعدد المهام
+        ->get();
+        $unreadMessagesCount = Chat::where('receiver_id', auth()->id())
+                            ->where('is_read', 0)
+                            ->count();
+        $unreadMessages = Chat::select('sender_id', DB::raw('count(*) as unread_count'))
+            ->where('receiver_id', auth()->id())
+            ->where('is_read', 0)
+            ->groupBy('sender_id')
+            ->get()
+            ->keyBy('sender_id');
+        $notifications = Notification::where('user_id', Auth::id())->orderBy('created_at', 'desc')->get();
+
+        return view('member.task.table' , compact('notifications' ,'task' , 'user' ,'unreadMessagesCount' , 'unreadMessages') );
+    }
+  
+    public function add_document( $id)
+    {
+        $user = DB::table('tasks')
+        ->join('teams', 'teams.id', '=', 'tasks.team_id') // جلب بيانات الفريق
+        ->join('users as managers', 'managers.id', '=', 'teams.manger_id') // جلب بيانات المدير
+        ->where('tasks.member_id', Auth::user()->id) // البحث عن الفرق التي ينتمي لها المستخدم
+        ->select('managers.*') // استخراج بيانات المدراء فقط
+        ->distinct() // تجنب التكرار في حالة تعدد المهام
+        ->get();
+        $unreadMessagesCount = Chat::where('receiver_id', auth()->id())
+                            ->where('is_read', 0)
+                            ->count();
+        $unreadMessages = Chat::select('sender_id', DB::raw('count(*) as unread_count'))
+            ->where('receiver_id', auth()->id())
+            ->where('is_read', 0)
+            ->groupBy('sender_id')
+            ->get()
+            ->keyBy('sender_id');
+            $task = Task::find($id);
+            $notifications = Notification::where('user_id', Auth::id())->orderBy('created_at', 'desc')->get();
+
+        return view('member.task.add' , compact('notifications' , 'task' , 'user'  ,'unreadMessagesCount' , 'unreadMessages') );
+    }
+    public function store_document(Request $request)
+    {
+        $request->validate([
+            'document' => 'required|mimes:pdf,docx,pptx',
+            'progress_update' => 'required|integer|min:1|max:100'
+        ], [
+            'document.mimes' => 'The document file must be a PDF, DOCX, or PPTX.',
+        ]);
+    
+        $taskId = $request->input('id');
+        $task = Task::findOrFail($taskId);
+        $user = Auth::user();
+    
+        // البحث عن تقرير موجود لنفس المهمة
+        $document = Document::where('task_id', $task->id)
+                            ->where('member_id', $user->id)
+                            ->first();
+    
+        if (!$document) {
+            $document = new Document();
+            $document->task_id = $task->id;
+            $document->member_id = $user->id;
+            $document->team_id = $task->team_id;
+        }
+    
+        // تحديث نسبة التقدم
+        $progressUpdate = $request->input('progress_update');
+        $document->progress_update = $progressUpdate;
+    
+        // رفع وتحديث الملف
+        if ($request->hasFile('document')) {
+            // حذف الملف السابق إن وجد
+            if ($document->document) {
+                $oldFile = public_path('uploads/document/' . $document->document);
+                if (File::exists($oldFile)) {
+                    File::delete($oldFile);
+                }
+            }
+    
+            // حفظ الملف الجديد
+            $file = $request->file('document');
+            $extension = $file->getClientOriginalExtension();
+            $filename = time() . '.' . $extension;
+            $file->move(public_path('uploads/document/'), $filename);
+            $document->document = $filename;
+        }
+    
+        $document->save();
+    
+        // تحديث تقدم المهمة
+        $task->progress = min(100, $task->progress + $progressUpdate);
+        if ($task->progress >= 100) {
+            $task->status = "Implemented"; // المهمة مكتملة
+        }
+
+        $task->update();
+    
+        return redirect()->route('member.show.task')->with('status', 'Report uploaded and progress updated!');
+    }
 }
+

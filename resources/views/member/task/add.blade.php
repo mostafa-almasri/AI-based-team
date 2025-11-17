@@ -9,7 +9,7 @@
                         <div class="cmp-tb-hd cmp-int-hd">
                             <h2>Upload file about your task</h2>
                         </div>
-                        <form action="" method="post" enctype="multipart/form-data">
+                        <form action="{{route('member.store.document')}}" method="post" enctype="multipart/form-data">
                             @csrf
                             @if($errors->any())
                             <div class="alert alert-danger">
@@ -25,6 +25,7 @@
                                 {{session('status')}}
                             </h6>
                         @endif
+                        <input type="hidden" name="id" value="{{$task->id}}">
 
                         <div class="form-example-int form-horizental">
                             <div class="form-group">

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Task;
 use App\Models\User;
 use App\Models\Report;
 use Illuminate\Database\Eloquent\Model;
@@ -11,7 +12,7 @@ class Team extends Model
 {
     use HasFactory;
     protected $fillable = [
-        'team_name', 'project_name', 'project_field', 'count_team', 'time_frame', 'manager_id', 'project_skill'
+       'project_name', 'project_field', 'count_team', 'time_frame', 'manager_id', 'project_skill'
     ];
 
     protected $casts = [
@@ -22,6 +23,17 @@ class Team extends Model
     {
         return $this->belongsTo(User::class , 'manger_id');
     }
-
+    public function tasks()
+    {
+        return $this->hasMany(Task::class, 'team_id');
+    }
+    public function projectProgress()
+    {
+        if ($this->tasks->count() == 0) {
+            return 0;
+        }
+    
+        return round($this->tasks->avg('progress'));
+    }
 
 }

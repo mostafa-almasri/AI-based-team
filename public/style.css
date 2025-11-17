@@ -3459,7 +3459,7 @@ textarea.auto-size {
 .note-editor .fa, .note-popover .fa {
     font-size: 12px;
 }
-.summernote-clickable .btn-primary, .summernote-clickable .btn-success, .modal-footer .btn-primary{
+.summernote-clickable .btn-primary, .summernote-clickable .ess, .modal-footer .btn-primary{
 	background:#00c292;
 	color:#fff;
 	border:none;

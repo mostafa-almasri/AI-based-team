@@ -28,7 +28,6 @@ class User extends Authenticatable
         'phone',
         'role',
         'job',
-        'age'
     ];
     public function teamMembers()
     {
@@ -42,7 +41,10 @@ class User extends Authenticatable
     {
         return $this->hasOne(Availability::class, 'user_id');
     }
-
+    public function member()
+    {
+        return $this->hasMany(Task::class, 'member_id');
+    }
     /**
      * The attributes that should be hidden for serialization.
      *

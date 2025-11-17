@@ -55,7 +55,7 @@
                                 </tbody>
                             </table>
                             @else
-                            <h3 class="text-center">No skill yet</h3>
+                            <h3 class="text-center" style="color: black;">No skill yet</h3>
                             @endif
                         </div>
                     </div>

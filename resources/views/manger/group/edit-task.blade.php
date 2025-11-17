@@ -9,7 +9,7 @@
                         <div class="cmp-tb-hd cmp-int-hd">
                             <h2>Edit task</h2>
                         </div>
-                        <form action="" method="post">
+                        <form action="{{route('manger.update.task')}}" method="post">
                             @method('PUT')
                             @csrf
                             @if($errors->any())
@@ -26,7 +26,7 @@
                                 {{session('status')}}
                             </h6>
                         @endif
-                        <input type="hidden" name="id" value="">
+                        <input type="hidden" name="id" value="{{$task->id}}">
                         <div class="form-example-int form-horizental">
                             <div class="form-group">
                                 <div class="row">
@@ -36,9 +36,11 @@
                                     <div class="col-lg-8 col-md-7 col-sm-7 col-xs-12">
                                         <div class="nk-int-st">
                                             <select name="member" id="" class="form-control input-sm">
-                                                <option value="">member1</option>
-                                                <option value="">member2</option>
+                                                <option value="{{$task->member_id}}">{{$task->member->name}}</option>
+                                                @foreach($user as $row)
+                                                <option value="{{$row->id}}">{{$row->name}}</option>
 
+                                                @endforeach
                                             </select>
                                         </div>
                                     </div>

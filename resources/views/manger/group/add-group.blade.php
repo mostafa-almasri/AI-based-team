@@ -9,7 +9,7 @@
                         <div class="cmp-tb-hd cmp-int-hd">
                             <h2>Add group</h2>
                         </div>
-                        <form action="" method="post">
+                        <form action="{{route('manger.store.group')}}" method="post">
                             @csrf
                             @if($errors->any())
                             <div class="alert alert-danger">
@@ -25,20 +25,7 @@
                                 {{session('status')}}
                             </h6>
                         @endif
-                        <div class="form-example-int form-horizental">
-                            <div class="form-group">
-                                <div class="row">
-                                    <div class="col-lg-2 col-md-3 col-sm-3 col-xs-12">
-                                        <label class="hrzn-fm">Team name</label>
-                                    </div>
-                                    <div class="col-lg-8 col-md-7 col-sm-7 col-xs-12">
-                                        <div class="nk-int-st">
-                                            <input type="text" class="form-control input-sm" placeholder="Enter team name" name="team_name">
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                      
                         <div class="form-example-int form-horizental">
                             <div class="form-group">
                                 <div class="row">
@@ -71,7 +58,7 @@
                             <div class="form-group">
                                 <div class="row">
                                     <div class="col-lg-2 col-md-3 col-sm-3 col-xs-12">
-                                        <label class="hrzn-fm">Number of member</label>
+                                        <label class="hrzn-fm">Total number of members</label>
                                     </div>
                                     <div class="col-lg-8 col-md-7 col-sm-7 col-xs-12">
                                         <div class="nk-int-st">

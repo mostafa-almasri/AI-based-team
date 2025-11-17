@@ -34,7 +34,6 @@
                                         <th>Name</th>
                                         <th>Email</th>
                                         <th>Job ID</th>
-                                        <th>Age</th>
                                         <th>Phone</th>
                                         <th>Available</th>
                                         <th>Delete</th>
@@ -46,7 +45,6 @@
                                         <td>{{$row->name}}</td>
                                         <td>{{$row->email}}</td>
                                         <td>{{$row->job}}</td>
-                                        <td>{{$row->age}}</td>
                                         <td>{{$row->phone}}</td>
                                         <td>{{ $row->is_available ? 'Availaible' : 'Busy' }}</td>
                                         <td><form action="{{route('admin.delete.user' , ['id'=>$row->id])}}" method="post">
