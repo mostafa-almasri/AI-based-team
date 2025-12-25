@@ -1,12 +1,13 @@
 @extends('manger.home')
 @section('content')
 <div class="normal-table-area">
+<h2 class="text-center">Management Projects</h2>
         <div class="container">
             <div class="row">
                 <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
                     <div class="normal-table-list mg-t-30">
                         <div class="basic-tb-hd">
-                            <h2>My tasks</h2>
+                            <h2> Tasks</h2>
                         </div>
                         <div class="bsc-tbl-hvr">
                         @if($task->count()>0)
@@ -33,7 +34,7 @@
                                         <td>{{$row->member->name}}</td>
                                         <td>{{$row->status}}</td>
                                         <td>{{$row->progress}} %</td>
-                                        <td><a href="{{route('manger.edit.task', ['id'=>$row->id])}}" class="btn btn-warning">Edit task</a></td>
+                                        <td><a href="{{route('manger.edit.task', ['id'=>$row->id])}}" class="btn btn-primary">Edit task</a></td>
 
 
 
@@ -44,7 +45,7 @@
                                                     <td></td>
                                                
                                                     <td  style="display: flex; flex-direction: column;    align-content: center;    flex-wrap: wrap;    align-items: center;">
-                                                        <strong>Download your report</strong> 
+                                                        <strong>Download report</strong> 
                                                         <?php
                                                         $file_path = asset('uploads/document/'.$row->document->document);
                                                         $file_extension = pathinfo($file_path, PATHINFO_EXTENSION);

@@ -51,7 +51,7 @@ body {
 /* الرسائل المرسلة */
 .sent {
   align-self: flex-end;
-  background: #00c292;
+  background: #0088cc;
   color: white;
   border-bottom-right-radius: 0;
 }
@@ -95,7 +95,7 @@ body {
   width: 90%;
   max-width: 900px;
   background: white;
-  color: #00c292;
+  color: #0088cc;
   padding: 10px;
   border-radius: 25px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);

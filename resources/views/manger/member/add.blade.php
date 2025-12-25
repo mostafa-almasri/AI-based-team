@@ -4,12 +4,15 @@
         <div class="container">
   
             <div class="row">
+
                 <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                <h2 class="text-center">Management members accounts</h2>
+
                     <div class="form-example-wrap mg-t-30">
                         <div class="cmp-tb-hd cmp-int-hd">
-                            <h2>Add account</h2>
+                            <h2>create account</h2>
                         </div>
-                        <form action="{{route('manger.store.member')}}" method="post">
+                        <form action="{{route('manger.store.member')}}" method="post" enctype="multipart/form-data">
                             @csrf
                             @if($errors->any())
                             <div class="alert alert-danger">
@@ -48,6 +51,20 @@
                                     <div class="col-lg-8 col-md-7 col-sm-7 col-xs-12">
                                         <div class="nk-int-st">
                                             <input type="email" class="form-control input-sm" placeholder="Enter email" name="email" required>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-example-int form-horizental">
+                            <div class="form-group">
+                                <div class="row">
+                                    <div class="col-lg-2 col-md-3 col-sm-3 col-xs-12">
+                                        <label class="hrzn-fm">Image</label>
+                                    </div>
+                                    <div class="col-lg-8 col-md-7 col-sm-7 col-xs-12">
+                                        <div class="nk-int-st">
+                                            <input type="file" class="form-control input-sm"  name="image">
                                         </div>
                                     </div>
                                 </div>
@@ -116,7 +133,7 @@
                                 <div class="col-lg-2 col-md-3 col-sm-3 col-xs-12">
                                 </div>
                                 <div class="col-lg-8 col-md-7 col-sm-7 col-xs-12">
-                                    <button class="btn btn-success notika-btn-success">Add</button>
+                                    <button class="btn btn-primary notika-btn-primary">Create</button>
                                 </div>
                             </div>
                         </div>

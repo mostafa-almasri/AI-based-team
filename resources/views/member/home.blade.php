@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
-    <title>Al-Based team</title>
+    <title>TMS</title>
     <meta name="description" content="">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="{{asset('chat.css')}}">
@@ -44,7 +44,7 @@
 }
 
 .hd-message-info::-webkit-scrollbar-thumb {
-    background: #8BC34A;
+    background:rgb(74, 141, 195);
     border-radius: 5px;
 }
 
@@ -79,11 +79,13 @@
             <div class="row">
                 <div class="col-lg-4 col-md-4 col-sm-12 col-xs-12">
                     <div class="logo-area">
- <a href="{{url('/')}}" style="display: flex;">         <img  src="{{url('../assets/img/logo.png')}}" alt="" width="50px" height="50px">
-                    <h1 style="color:white; margin:10px">Al-Based team</h1></a>
+                        <a href="{{url('/')}}" style="display: flex;">
+                            <img  src="{{url('../assets/img/logo.png')}}" alt="" width="50px" height="50px">
+                            <h1 style="color:white; margin:10px">TMS</h1>
+                        </a>
                     </div>
                 </div>
-                <div class="col-lg-8 col-md-8 col-sm-12 col-xs-12">
+                <div class="col-lg-8 col-md-8 col-sm-12 col-xs-12" style="margin-top: 15px;">
                     <div class="header-top-menu">
                         <ul class="nav navbar-nav notika-top-nav">
                             <li class="nav-item" style="margin-right: 20px;">
@@ -94,13 +96,9 @@
                                 </div>
                             </li>
                             <li class="nav-item dropdown">
-                                <a style="padding:20px 20px 20px 5px;" href="#" id="markAsRead" data-toggle="dropdown" role="button" aria-expanded="false" class="nav-link dropdown-toggle">
+                                <a  href="#" id="markAsRead" data-toggle="dropdown" role="button" aria-expanded="false" class="nav-link dropdown-toggle">
                                     <span> <i class="notika-icon notika-mail"></i></span>
-                                    @if($unreadMessagesCount == 0)
-                                  <div class="ntd-ctn"> <span id="unreadCount">{{ $unreadMessagesCount }}</span></div>
-                                    @else
-                                    <div class="spinner4 spinner-4"></div><div class="ntd-ctn"> <span id="unreadCount">{{ $unreadMessagesCount }}</span></div>
-                                    @endif
+                                
                                 </a>
                                     
                               <div role="menu" class="dropdown-menu message-dd animated zoomIn">
@@ -134,18 +132,17 @@
                                   </div>
                               </div>
                             </li>
-                             
                             <li class="nav-item dropdown">
-                                <a style="padding:20px 20px 20px 5px;" href="#" data-toggle="dropdown" role="button" aria-expanded="false" 
-                                class="nav-link dropdown-toggle notification-icon">
+                                <a href="#" data-toggle="dropdown" role="button" aria-expanded="false" class="nav-link dropdown-toggle notification-icon">
                                     <span><i class="notika-icon notika-alarm"></i></span>
-
-                                    <div class="ntd-ctn">
-                                        <span id="notification-count">{{ $notifications->where('is_read', false)->count() }}</span>
-                                    </div>
+                                    @if($unreadMessagesCount == 0)
+                                  <div class="ntd-ctn"> <span id="unreadCount">{{ $unreadMessagesCount }}</span></div>
+                                    @else
+                                    <div class="spinner4 spinner-4"></div><div class="ntd-ctn"> <span id="unreadCount">{{ $unreadMessagesCount }}</span></div>
+                                    @endif
                                 </a>
 
-                                <div role="menu" class="dropdown-menu message-dd notification-dd animated zoomIn" style=" width: auto !important;">
+                                <div role="menu" style="left:-350px; width:auto !important;" class="dropdown-menu message-dd notification-dd animated zoomIn" style=" width: auto !important;">
                                     <div class="hd-mg-tt">
                                         <h2>Notifications</h2>
                                     </div>
@@ -153,7 +150,7 @@
 
                                     <div class="hd-message-info" id="notification-list" >
                                         @foreach($notifications as $notification)
-                                            <a href="#" class="notification-item" data-id="{{ $notification->id }}">
+                                            <a href="{{route('member.show.task')}}" class="notification-item" data-id="{{ $notification->id }}">
                                                 <div class="hd-message-sn" style="background-color: {{ $notification->is_read ? '#f1f1f1' : '#fff3cd' }};">
                                                     <div class="hd-mg-ctn">
                                                         <p>{{ $notification->message }}</p>
@@ -167,14 +164,19 @@
 
                                     @if($notifications->where('is_read', false)->count() > 0)
                                         <div class="text-center">
-                                            <button id="mark-all-read" class="btn btn-success">Make it read </button>
+                                            <button id="mark-all-read" class="btn btn-primary">Make it read </button>
                                         </div>
                                     @endif                   
                                 </div>                     
                             </li>
-                       
                             <li class="nav-item dropdown">
-                                <a href="#" data-toggle="dropdown" role="button" aria-expanded="false" class="nav-link dropdown-toggle"><span><i class="notika-icon notika-support"></i></span> {{Auth::user()->name}}</a>
+                                <a href="#" data-toggle="dropdown" role="button" aria-expanded="false" class="nav-link dropdown-toggle"><span><i class="notika-icon notika-support"></i></span>                                     
+                                @if($notifications->where('is_read', false)->count()>0)
+                                <div class="spinner4 spinner-4"></div><div class="ntd-ctn"> <span id="notification-count">{{ $notifications->where('is_read', false)->count() }}</span></div>
+                                @else
+                                <div class="ntd-ctn"> <span id="notification-count">{{ $notifications->where('is_read', false)->count() }}</span></div>
+                                @endif
+                                {{Auth::user()->name}}</a>
                                 <div role="menu" class="dropdown-menu message-dd animated zoomIn">
 
                                     <div class="hd-message-info">
@@ -196,8 +198,7 @@
                                     </div>
                                   
                                 </div>
-                            </li>
-                            
+                            </li>      
                         </ul>
                     </div>
                 </div>
@@ -213,17 +214,17 @@
                     <div class="mobile-menu">
                         <nav id="dropdown">
                             <ul class="mobile-menu-nav">
-                                <li><a data-toggle="collapse"  href="{{url('/home')}}">Home</a>
+                                <li class="{{ Request::is('home') ? 'active' : '' }}"><a data-toggle="collapse"  href="{{url('/home')}}">Home</a>
                                    
                                 </li>
-                                <li><a data-toggle="collapse" href="{{route('member.show.task')}}">My Tasks</a>
+                                <li class="{{ Request::is('member/task*') ? 'active' : '' }}"><a data-toggle="collapse" href="{{route('member.show.task')}}">My Tasks</a>
   
-                                </li>
+                                </li >
                 
-                                <li><a data-toggle="collapse"  href="{{route('member.show.skill')}}">Skills</a>
+                                <li class="{{ Request::is('member/skill*') ? 'active' : '' }}"><a data-toggle="collapse"  href="{{route('member.show.skill')}}">Skills</a>
                               
                                 </li>
-                                <li><a data-toggle="collapse"  href="{{route('member.show.team')}}">Team group</a>
+                                <li class="{{ Request::is('member/group*') ? 'active' : '' }}"> <a data-toggle="collapse"  href="{{route('member.show.team')}}">Project team</a>
                          
                                 </li>
                               
@@ -241,24 +242,25 @@
             <div class="row">
                 <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
                     <ul class="nav nav-tabs notika-menu-wrap menu-it-icon-pro">
-                        <li class="active"><a  href="{{url('/home')}}"><i class="notika-icon notika-house"></i> Home</a>
+                        <li class="{{ Request::is('home') ? 'active' : '' }}"><a  href="{{url('/home')}}"><i class="notika-icon notika-house"></i> Home</a>
                         </li>
-                        <li><a  href="{{route('member.show.task')}}"><i class="notika-icon notika-support"></i> My Tasks</a>
+                        <li class="{{ Request::is('member/task*') ? 'active' : '' }}"><a  href="{{route('member.show.task')}}"><i class="notika-icon notika-support"></i> My Tasks</a>
                         </li>
                
-                        <li><a  href="{{route('member.show.skill')}}"><i class="notika-icon notika-form"></i> Skills</a>
+                        <li class="{{ Request::is('member/skill*') ? 'active' : '' }}"><a  href="{{route('member.show.skill')}}"><i class="notika-icon notika-form"></i> Skills</a>
                         </li>
-                        <li><a  href="{{route('member.show.team')}}"><i class="notika-icon notika-windows"></i> Team group</a>
+                        <li class="{{ Request::is('member/group*') ? 'active' : '' }}"><a  href="{{route('member.show.team')}}"><i class="notika-icon notika-windows"></i> Project team</a>
                         </li>
                         </li>
                     </ul>
                     <div class="tab-content custom-menu-content">
                       
             
-                    @yield('content')
+                                                @yield('content')
 
-         
-                      
+                                                
+                                            
+                                                        
                     </div>
                 </div>
             </div>
@@ -267,23 +269,10 @@
     <!-- Main Menu area End-->
     <script>
       document.getElementById('markAsRead').addEventListener('click', function(event) {
-          event.preventDefault(); // منع إعادة التحميل
-
-          fetch("{{ route('markAsRead') }}", {
-              method: 'POST',
-              headers: {
-                  'Content-Type': 'application/json',
-                  'X-CSRF-TOKEN': '{{ csrf_token() }}'
-              }
-          })
-          .then(response => response.json())
-          .then(data => {
-              if (data.success) {
+        
                   // تحويل العدد إلى صفر
                   document.getElementById('unreadCount').textContent = 0;
-              }
-          })
-          .catch(error => console.error('Fetch Error:', error));
+            
       });
     </script> 
     <script>

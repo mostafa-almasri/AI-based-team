@@ -120,12 +120,23 @@ class RegisterController extends Controller
      */
     protected function create(array $data)
     {
+                // التحقق من وجود الصورة
+                if (isset($data['image']) && $data['image']) {
+                    $file = $data['image'];
+                    $extention = $file->getClientOriginalExtension();
+                    $filename = time() . '.' . $extention;
+                    $file->move('uploads/profile/', $filename);
+                    $image = $filename;
+                } else {
+                    $image = null; // تعيين قيمة افتراضية إذا لم تكن الصورة موجودة
+                }
         return User::create([
             'name' => $data['name'],
             'email' => $data['email'],
             'phone' => $data['phone'],
             'job' => $data['job'],
             'role' => 'manger',
+            'image' => $image,
             'password' => Hash::make($data['password']),
         ]);
     }

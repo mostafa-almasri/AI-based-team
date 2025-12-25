@@ -1,138 +1,133 @@
 @extends('manger.home')
 @section('content')
-<div class="normal-table-area">
-        <div class="container">
-        <a href="{{route('manger.add.group')}}" class="btn btn-info">+ Create group</a>
+<div class="inbox-area">
+<h2 class="text-center">Management Projects</h2>
 
+    <a href="{{route('manger.add.group')}}" class="btn btn-info">+ Create Project</a>
+        <div class="container">
             <div class="row">
-                <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
-                    <div class="normal-table-list mg-t-30">
-                        <div class="basic-tb-hd">
-                            <h2>My groups</h2>
-                        </div>
-                        @if($errors->any())
-                            <div class="alert alert-danger">
-                                <ul>
-                                    @foreach($errors->all() as $error)
-                                        <li>{{ $error }}</li>
-                                    @endforeach
+                <div class="basic-tb-hd">
+                </div>
+                @if($errors->any())
+                    <div class="alert alert-danger">
+                        <ul>
+                            @foreach($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif    
+                @if(session('status'))
+                    <h6 class="alert alert-success" style="text-align: center;">
+                        {{session('status')}}
+                    </h6>
+                @endif
+                @if($group->count()>0)
+                    @foreach($group as $row)
+                    <div class="col-lg-3 col-md-3 col-sm-4 col-xs-12">
+                        <div class="inbox-left-sd">
+                            <div class="compose-ml">
+                                <h3>{{$row->project_name}}</h3>
+                            </div>
+                            <div class="inbox-status">
+                                <ul class="inbox-st-nav inbox-ft">
+                                    <li><a href="#">Details:</a></li>
+                                    <li> <p>Field project : <span style="font-weight: bold;">{{$row->project_field}}</span> </p> </li>
+                                    <li> <p>Total number of member : <span style="font-weight: bold;">{{$row->count_team}}</span> </p> </li>
+                                    <li> <p>Deadline : <span style="font-weight: bold;">{{$row->time_frame}}</span> </p> </li>
+                                 
                                 </ul>
                             </div>
-                        @endif    
-                        @if(session('status'))
-                            <h6 class="alert alert-success" style="text-align: center;">
-                                {{session('status')}}
-                            </h6>
-                        @endif
-                        <div class="bsc-tbl-hvr">
-                        @if($group->count()>0)
-
-                            <table class="table table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>Project name</th>
-                                        <th>Project goal</th>
-                                        <th>Total number of members</th>
-                                        <th>Deadline</th>
-                                        <th>Skills</th>       
-                                        <th>Add task</th>                                 
-                                        <th>Delete group</th>
-                                        <th>Edit group</th>
-                                        <th>Show team members</th>
-                                        <th>Show task</th>
-                                        <th>Generate report</th>
-
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                @foreach($group as $row)
-                                    <tr>
-                                        <td>{{$row->project_name}}</td>
-                                        <td>{{$row->project_field}}</td>
-                                        <td>{{$row->count_team}}</td>
-                                        <td>{{$row->time_frame}}</td>
-                                        <td> 
-                                            <?php
-                                            // فك تشفير JSON إلى مصفوفة أو كائن
-                                            $skills = json_decode($row->project_skill);
-                                            
-                                            // التحقق مما إذا كانت البيانات موجودة
-                                            if ($skills) {
-                                                // إذا كانت المصفوفة تحتوي على عناصر، اعرضها
-                                                echo implode(', ', $skills);
-                                            } else {
-                                                echo "No skills assigned";
-                                            }
-                                            ?>
-                                        </td>
-                                        <td><a href="{{route('manger.add.task' , ['id'=>$row->id])}}" class="btn btn-info">Add task</a></td>
-                                        <td><form action="{{route('manger.delete.group' , ['id'=>$row->id])}}" method="post">
-                                            <button class="btn btn-danger">Delete</button>
-                                            @csrf
+                            <hr>
+                            <div class="inbox-status">
+                                <ul class="inbox-st-nav inbox-ft">
+                                    <li><a href="#">Action:</a></li>
+                                    <li><form action="{{route('manger.delete.group' , ['id'=>$row->id])}}" method="post"> @csrf
+                                    <button style="background-color: transparent;border:none; padding:0;"><i class="notika-icon notika-trash"></i><span style="font-weight: bold;"> Delete</span> 
                                             @method('delete')
-                                            </form>
-                                        </td>                                        
-                                        <td><a href="{{route('manger.edit.group' , ['id'=>$row->id])}}" class="btn btn-primary">Edit</a></td>
-                                        <td><a href="{{route('manger.show.team', ['id'=>$row->id])}}" class="btn btn-info">Show team</a></td>
-                                        <td><a href="{{route('manger.show.task', ['id'=>$row->id])}}" class="btn btn-warning">Show task</a></td>
-                                        <td>
-                                        
-                                                <button class="btn btn-success">Generate</button>
-                                            </form>
-                                        </td>
+                                        </form> </button>
+                                    </li>
+                                    <li><a href="{{route('manger.edit.group' , ['id'=>$row->id])}}"><i class="notika-icon notika-draft"></i><span style="font-weight: bold;"> Edit</span></a></li>
+                                    <li><a href="{{route('manger.add.task' , ['id'=>$row->id])}}"><i class="notika-icon notika-plus-symbol"></i><span style="font-weight: bold;"> Add task</span>  </a></li>
+                                    <li><a href="{{route('manger.show.task', ['id'=>$row->id])}}"><i class="notika-icon notika-success"></i><span style="font-weight: bold;"> Show task</span>  </a></li>
+                                    <li><a href="{{ route('report.generate', ['id' => $row->id]) }}"><i class="notika-icon notika-form"></i> <span style="font-weight: bold;">Generate Report </span></a></li>
+                                </ul>
+                            </div> 
+                            <hr>
 
-                                    </tr>
-                                    
+                            <div class="inbox-status">
+                                <div class="accordion-stn sm-res-mg-t-30">
+                                    <div class="panel-group" data-collapse-color="nk-red" id="accordion{{$row->id}}member" role="tablist" aria-multiselectable="true">
+                                        <div class="panel panel-collapse notika-accrodion-cus">
+                                            <div class="panel-heading" role="tab">
+                                                <h4 class="panel-title">
+                                                    <a class="collapsed" data-toggle="collapse" data-parent="#accordion{{$row->id}}member" href="#accordionRed-{{$row->id}}member" aria-expanded="false">
+															Members<span class="pull-right">{{ $row->members->count() }}</span>
+														</a>                                                
+                                                </h4>
+                                            </div>
+                                            <div id="accordionRed-{{$row->id}}member" class="collapse" role="tabpanel">
+                                                <div class="panel-body">
+                                                    <ul class="inbox-st-nav inbox-ft">
+                                                        <li>Name:</li>
+                                                        @foreach($row->members as $member)
+                                                            <li><i class="notika-icon notika-support"></i>  {{ $member->name }}</li>
+                                                        @endforeach
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="inbox-status">
+                                <div class="accordion-stn sm-res-mg-t-30">
+                                    <div class="panel-group" data-collapse-color="nk-green" id="accordion{{$row->id}}skill" role="tablist" aria-multiselectable="true">
+                                        <div class="panel panel-collapse notika-accrodion-cus">
+                                            <div class="panel-heading" role="tab">
+                                                <h4 class="panel-title">
+                                                    <a class="collapsed" data-toggle="collapse" data-parent="#accordion{{$row->id}}skill" href="#accordionRed-{{$row->id}}skill" aria-expanded="false">
+															Skills
+														</a>
+                                                </h4>
+                                            </div>
+                                            <div id="accordionRed-{{$row->id}}skill" class="collapse" role="tabpanel">
+                                                <div class="panel-body">
+                                                <?php
+                                                    $skills = json_decode($row->project_skill);
 
-                                    @if($row->report && $row->report->team_id == $row->id )
-                                    <tr>
-    <td colspan="10" style="text-align: center;">
-        <h4>Report</h4>
-    </td>
-</tr>
-<tr>
-<td colspan="10" style="text-align: center;">
-<div style="display: flex; justify-content: center; align-items: center; gap: 50px;">
-
-        <!-- Overall Performance -->
-        <div style="text-align: center;">
-            <strong>Overall performance</strong><br>
-            {{$row->report->overall_performance}}
-        </div>
-
-        <!-- Download Report -->
-        <div style="text-align: center;">
-            <strong>Download final report</strong><br>
-            <?php
-            $file_path = asset($row->report->report_path);
-            $file_extension = pathinfo($file_path, PATHINFO_EXTENSION);
-            ?>
-            <?php if (in_array($file_extension, ['pdf', 'docx', 'pptx'])): ?>
-                <div class="breadcomb-report">
-                    <a href="<?php echo $file_path; ?>" data-toggle="tooltip" data-placement="right" title="Download Report" class="btn">
-                        <i class="notika-icon notika-sent"></i>
-                    </a>
-                </div>
-            <?php else: ?>
-                <p>File type not supported</p>
-            <?php endif; ?>
-        </div>
-            </div>
-    </td>
-</tr>
-
-                                    @endif
-                                    @endforeach
-                               
-                                </tbody>
-                            </table>
-                            @else
-                            <h3 class="text-center">No group yet</h3>
-                            @endif
+                                                    if ($skills && is_array($skills)) {
+                                                        echo '<ol style="padding-left: 25px;">';
+                                                        foreach ($skills as $skill) {
+                                                            echo "<li>$skill</li>";
+                                                        }
+                                                        echo "</ol>";
+                                                    } else {
+                                                        echo "<p>No skills assigned</p>";
+                                                    }
+                                                    ?>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </div>
+                    @endforeach
+                @else
+                    <h3 class="text-center">No group yet</h3>
+                @endif
+
             </div>
         </div>
 </div>
+
+                        
+                            
+                                 
+                                      
+
+         
+                                    
 @endsection

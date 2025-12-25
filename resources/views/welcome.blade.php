@@ -3,11 +3,12 @@
 <head>
   <meta charset="utf-8">
   <meta content="width=device-width, initial-scale=1.0" name="viewport">
-  <title>Al-Based team</title>
+  <title>TMS</title>
   <meta name="description" content="">
   <meta name="keywords" content="">
   <link href="{{asset('assets/vendor/bootstrap/css/bootstrap.min.css')}}" rel="stylesheet">
   <link href="{{asset('assets/css/main.css')}}" rel="stylesheet">
+
 
 </head>
 
@@ -18,7 +19,7 @@
 
       <a href="{{url('/')}}" class="logo d-flex align-items-center me-auto">
          <img src="{{url('../assets/img/logo.png')}}" alt="">
-        <h1 class="sitename">Al-Based team</h1>
+        <h1 class="sitename">TMS</h1>
       </a>
 
       <nav id="navmenu" class="navmenu">
@@ -51,7 +52,7 @@
       <div class="container">
         <div class="row gy-4">
           <div class="col-lg-6 order-2 order-lg-1 d-flex flex-column justify-content-center" data-aos="fade-up">
-            <h1>Welcome to <br>  Al-based team</h1>
+            <h1>Welcome to <br>  Task Management system</h1>
             <p>Your collaborative space for task management and team coordination.</p>
            
           </div>
@@ -63,12 +64,41 @@
 
     </section><!-- /Hero Section -->
 
+    <section id="about" class="about section">
 
- 
+      <!-- Section Title -->
+      <div class="container section-title" data-aos="fade-up">
+        <span>About Us<br></span>
+        <h2>About</h2>
+        <p>Management task and adminstrator members</p>
+      </div><!-- End Section Title -->
+
+      <div class="container">
+
+        <div class="row gy-4">
+          <div class="col-lg-6 position-relative align-self-start" data-aos="fade-up" data-aos-delay="100">
+            <img src="assets/img/about.png" class="img-fluid" alt="">
+          </div>
+          <div class="col-lg-6 content" data-aos="fade-up" data-aos-delay="200">
+            <h3>Leading Collaborative Project Management.</h3>
+        
+            <ul>
+              <li><i class="bi bi-check2-all"></i> <span> A project and task management platform designed for modern teams.</span></li>
+              <li><i class="bi bi-check2-all"></i> <span>We empower teams to create and coordinate teams, add projects and tasks, and track progress centrally and transparently.</span></li>
+              <li><i class="bi bi-check2-all"></i> <span>Our solutions enhance collaboration, improve organization, and shorten turnaround times through a simple and efficient interface, with the potential to scale across multiple organizations and collaborations.</span></li>
+            </ul>
+            <p>
+              Ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate
+              velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident
+            </p>
+          </div>
+        </div>
+
+      </div>
+
+    </section><!-- /About Section -->
+
   </main>
-
-  <!-- Scroll Top -->
-  <a href="#" id="scroll-top" class="scroll-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
 
   <!-- Preloader -->
   <div id="preloader"></div>
