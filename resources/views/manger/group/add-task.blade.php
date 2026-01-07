@@ -2,11 +2,14 @@
 @section('content')
 <div class="form-example-area">
         <div class="container">
+        <h2 class="text-center">Management Projects</h2>
 
             <div class="row">
                 <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
                     <div class="form-example-wrap mg-t-30">
-                        
+                    <div class="cmp-tb-hd cmp-int-hd">
+                            <h2>Add task</h2>
+                        </div>
                         <div class="bsc-tbl-hvr">
                             <div class="cmp-tb-hd cmp-int-hd">
                                 <h4 class="text-center">A table containing some task ideas based on the required skills</h4>
@@ -195,9 +198,7 @@
                                 </tbody>
                             </table>
                         </div>
-                        <div class="cmp-tb-hd cmp-int-hd">
-                            <h2>Add task</h2>
-                        </div>
+                   
                         <form action="{{route('manger.store.task')}}" method="post">
                             @csrf
                             @if($errors->any())
@@ -240,10 +241,15 @@
                                         <div class="nk-int-st">
                                             <select name="member" id="" class="form-control input-sm">
                                                 <option value="">Select member</option>
+                                                @if($member->count()>0)
                                                 @foreach($member as $row)
-                                                <option value="{{$row->id}}">{{$row->name}} - {{$row->is_available ? 'Availaible' : 'Busy'}}</option>
-
+                                                <option value="{{$row->id}}">
+                                                    {{$row->name}} - {{$row->is_available ? 'Available' : 'Busy'}} - Skills: {{$row->member_skills }}
+                                                </option>
                                                 @endforeach
+                                                @else
+                                                <option value="">No member for this group</option>
+                                                @endif
                                             </select>
                                         </div>
                                     </div>
@@ -314,7 +320,7 @@
                                 <div class="col-lg-2 col-md-3 col-sm-3 col-xs-12">
                                 </div>
                                 <div class="col-lg-8 col-md-7 col-sm-7 col-xs-12">
-                                    <button class="btn btn-success notika-btn-success">Add</button>
+                                    <button class="btn btn-primary notika-btn-primary">Add</button>
                                 </div>
                             </div>
                         </div>

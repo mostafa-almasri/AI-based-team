@@ -1,110 +1,121 @@
-<!doctype html>
-<html class="no-js" lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
-    <meta charset="utf-8">
-    <meta http-equiv="x-ua-compatible" content="ie=edge">
-    <title>Al-Based team</title>
-    <meta name="description" content="">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="{{asset('chat.css')}}">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    <link rel="stylesheet" href="{{asset('css/bootstrap.min.css')}}">
-    <link rel="stylesheet" href="{{asset('css/meanmenu/meanmenu.min.css')}}">
-    <link rel="stylesheet" href="{{asset('css/animate.css')}}">
-    <link rel="stylesheet" href="{{asset('css/scrollbar/jquery.mCustomScrollbar.min.css')}}">
-    <link rel="stylesheet" href="{{asset('css/notika-custom-icon.css')}}">
-    <link rel="stylesheet" href="{{asset('style.css')}}">
-    <link rel="stylesheet" href="{{asset('css/responsive.css')}}">
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <title>TMS</title>
+  <meta name="description" content="">
+  <meta name="keywords" content="">
+  <link href="{{asset('assets/vendor/bootstrap/css/bootstrap.min.css')}}" rel="stylesheet">
+  <link href="{{asset('assets/css/main.css')}}" rel="stylesheet">
+
+
 </head>
 
-<body>
-<div class="header-top-area">
-        <div class="container">
-            <div class="row">
-                <div class="col-lg-4 col-md-4 col-sm-12 col-xs-12">
-                    <div class="logo-area">
-                    <a href="{{url('/')}}" style="display: flex;" >  
-             <img  src="{{url('../assets/img/logo.png')}}" alt="" width="50px" height="50px">
-                    <h1 style="color:white; margin:10px">Al-Based team</h1></a>
-                    </div>
-                </div>
-              
-            </div>
-        </div>
+<body class="index-page">
+
+  <header id="header" class="header d-flex align-items-center sticky-top">
+    <div class="container-fluid container-xl position-relative d-flex align-items-center">
+
+      <a href="{{url('/')}}" class="logo d-flex align-items-center me-auto">
+         <img src="{{url('../assets/img/logo.png')}}" alt="">
+        <h1 class="sitename">TMS</h1>
+      </a>
+
+      <nav id="navmenu" class="navmenu">
+        <ul>
+          <li><a href="{{url('/')}}" class="active">Home</a></li>
+         
+        </ul>
+        <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
+      </nav>
+
+      @if (Route::has('login'))
+                    @auth
+                    <a href="{{ url('/home') }}" class="btn-getstarted">My profile</a>
+                    @else
+                    <a href="{{ route('login') }}" class="btn-getstarted">Login</a>
+                    @if (Route::has('register'))
+                    <a href="{{ route('register') }}" class="btn-getstarted">Register</a>
+                    @endif
+                    @endauth
+            @endif 
+      
     </div>
-  
-    <!-- Login Register area Start-->
-    <div class="login-content">
-        <!-- Login -->
-        <div class="nk-block toggled" id="l-login">
-        <h2>Sign in Al-Based team</h2>
-        <h3>{{ __('Reset Password') }}</h3>
-   
-            <form method="POST" action="{{ route('password.update') }}">
-                        @csrf
-                <div class="nk-form">
+  </header>
+
+  <main class="main">
+
+    <!-- Contact Section -->
+    <section id="contact" class="contact section">
+
+      <!-- Section Title -->
+      <div class="container section-title" data-aos="fade-up">
+        <span>Reset password</span>
+        <h2>Reset password</h2>
+      </div><!-- End Section Title -->
+
+      <div class="container" data-aos="fade-up" data-aos-delay="100">
+
+        <div class="row" style="display: flex; justify-content: center;">
+
+
+          <div class="col-lg-7">
+        
+            <form action="{{ route('password.update') }}" method="post" class="php-email-form" data-aos="fade-up" data-aos-delay="200">
+              <div class="row gy-4">
+              <input type="hidden" name="token" value="{{ $token }}">
+              @csrf
                         @if($errors->any())
-                            <div class="alert alert-danger">
-                                <ul>
+                        <div class="alert alert-danger">
+                        <ul>
                                     @foreach($errors->all() as $error)
                                         <li>{{ $error }}</li>
                                     @endforeach
                                 </ul>
-                            </div>
+                        </div>
+                    
                         @endif    
                         @if(session('status'))
                             <h6 class="alert alert-success" style="text-align: center;">
                                 {{session('status')}}
                             </h6>
                         @endif
-                        <input type="hidden" name="token" value="{{ $token }}">
+                        <div class="col-md-12">
+                  <label for="name-field" class="pb-2">Password</label>
+                  <input type="password" class="form-control" placeholder="Password" name="password" required autocomplete="current-password">
+                  </div>
+                <div class="col-md-12">
+                  <label for="name-field" class="pb-2">Confirm password</label>
+                  <input type="password" class="form-control" placeholder="Confirm Password" id="password-confirm"  name="password_confirmation" required autocomplete="new-password">
+                  </div>
 
-                    <div class="input-group">
-                        <span class="input-group-addon nk-ic-st-pro"><i class="notika-icon notika-support"></i></span>
-                        <div class="nk-int-st">
-                        <input id="email" type="email" class="form-control @error('email') is-invalid @enderror" name="email" value="{{ $email ?? old('email') }}" required autocomplete="email" autofocus>
-                        </div>
-                    </div>
-                    <div class="input-group mg-t-15">
-                        <span class="input-group-addon nk-ic-st-pro"><i class="notika-icon notika-edit"></i></span>
-                        <div class="nk-int-st">
-                            <input type="password" class="form-control" placeholder="Password" name="password" required autocomplete="current-password">
-                        </div>
-                    </div>
-                    <div class="input-group mg-t-15">
-                        <span class="input-group-addon nk-ic-st-pro"><i class="notika-icon notika-edit"></i></span>
-                        <div class="nk-int-st">
-                            <input type="password" class="form-control" placeholder="Confirm Password" id="password-confirm"  name="password_confirmation" required autocomplete="new-password">
-                        </div>
-                    </div>
+                <div class="col-md-12 text-center">
+                  
 
-            
+                  <button type="submit">Reset Password</button>
                 </div>
-                <div class="row mb-0">
-                            <div class="col-md-6 offset-md-4">
-                                <button type="submit" class="btn btn-primary">
-                                    {{ __('Reset Password') }}
-                                </button>
-                            </div>
-                        </div>
 
+              </div>
             </form>
-          
-      
+          </div><!-- End Contact Form -->
+
         </div>
 
-  
+      </div>
 
-    </div>
-    <script src="{{asset('js/vendor/jquery-1.12.4.min.js')}}"></script>
-    <script src="{{asset('js/bootstrap.min.js')}}"></script>
-    <script src="{{asset('js/jquery.scrollUp.min.js')}}"></script>
-    <script src="{{asset('js/scrollbar/jquery.mCustomScrollbar.concat.min.js')}}"></script>
-    <script src="{{asset('js/login/login-action.js')}}"></script>
-    <script src="{{asset('js/main.js')}}"></script>
+    </section><!-- /Contact Section -->
+
+  </main>
+
+  <!-- Preloader -->
+  <div id="preloader"></div>
+
+
+  <script src="{{asset('assets/js/main.js')}}"></script>
+
 </body>
 
 </html>
-
 
 

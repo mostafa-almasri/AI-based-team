@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
+use Carbon\Carbon;
 use App\Models\Chat;
 use App\Models\Task;
 use App\Models\Team;
@@ -11,10 +12,13 @@ use App\Models\Document;
 use App\Models\Availability;
 use App\Models\Notification;
 use Illuminate\Http\Request;
+use App\Models\ProgressHistory;
+use Barryvdh\DomPDF\Facade\Pdf as FacadePdf;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Hash;
+use Barryvdh\DomPDF\PDF;
 
 class HomeController extends Controller
 {
@@ -55,9 +59,118 @@ class HomeController extends Controller
                     ->groupBy('sender_id')
                     ->get()
                     ->keyBy('sender_id');
-                $teams = Team::with('tasks')->where('manger_id', auth()->id())->get();
-             
-                return view('manger.hom' , compact('teams','user' ,'unreadMessagesCount' , 'unreadMessages') );
+                    $manager_id = auth()->id();
+
+                    // جلب كل المشاريع مع المهام
+                    $teams = Team::with(['tasks', 'tasks.progressHistory'])
+                    ->where('manger_id', $manager_id)
+                    ->get();                
+                  
+                    $projects = $teams->map(function($team){
+
+                        $completed   = $team->tasks->where('progress',100)->count();
+                        $inProgress  = $team->tasks->whereBetween('progress',[1,99])->count();
+                        $pending     = $team->tasks->where('progress',0)->count();
+                    
+                        //مهمة متأخرة
+                        $lateTasks   = $team->tasks->filter(function($t){
+                            return $t->finish_date < now() && $t->progress < 100;
+                        })->count();
+                    
+                        $history = [];
+                            foreach ($team->tasks as $task) {
+                                foreach ($task->progressHistory as $h) {
+                                    $date = Carbon::parse($h->recorded_at)->format('Y-m-d');
+                                    if (!isset($history[$date])) $history[$date] = [];
+                                    $history[$date][] = $h->progress;
+                                }
+                            }
+
+                            // إنشاء محور التاريخ الموحد (مرتّب)
+                            $allDates = collect(array_keys($history))->sort()->values(); // مجموعة من تواريخ 'Y-m-d'
+
+                            // متوسط المشروع اليومي (محوري)
+                            $timeline_progress = collect($history)->map(function($values){
+                                return round(array_sum($values) / count($values));
+                            })->only($allDates->all()); // نتأكّد أنها مرتبة طبقًا للـ allDates
+
+                            // الآن نبني timeline لكل مهمة ولكن مع محاذاة للتواريخ الموحدة
+                            $tasksTimeline = [];
+                            foreach ($team->tasks as $task) {
+                                // خريطة تاريخ => قيمة لهذه المهمة
+                                $map = [];
+                                foreach ($task->progressHistory as $h) {
+                                    $d = Carbon::parse($h->recorded_at)->format('Y-m-d');
+                                    $map[$d] = $h->progress;
+                                }
+
+                                // نُنشئ مصفوفة قيم بنفس ترتيب $allDates
+                                $values = [];
+                                $last = null;
+                                foreach ($allDates as $date) {
+                                    if (array_key_exists($date, $map)) {
+                                        $last = $map[$date];
+                                        $values[] = $map[$date];
+                                    } else {
+                                        // forward-fill: استخدم آخر قيمة معروفة كي لا يظهر انقطاع (يمكن تغييره إلى null إن أردت)
+                                        $values[] = $last === null ? null : $last;
+                                    }
+                                }
+
+                                $tasksTimeline[] = [
+                                    'task_id'   => $task->id,
+                                    'task_name' => $task->task_name,
+                                    'isLate'    => ($task->finish_date < now() && $task->progress < 100),
+                                    'values'    => $values
+                                ];
+                            }
+
+                            // تحديد إن كان المشروع انتهى زمنه (قارن باستخدام Carbon)
+                            $maxFinish = $team->time_frame; // قد يكون null
+                            $projectLate = $maxFinish ? (Carbon::parse($maxFinish) < now()) : false;
+
+                            // باقي حسابات الـ stacked كما لديك...
+                            $completed   = $team->tasks->where('progress',100)->count();
+                            $inProgress  = $team->tasks->whereBetween('progress',[1,99])->count();
+                            $pending     = $team->tasks->where('progress',0)->count();
+                        
+                            return [
+                                'name' => $team->project_name,
+                                'progress' => $team->projectProgress(),
+
+                                'tasks' => $team->tasks->map(function($t){
+                                    return [
+                                        'name'     => $t->task_name,
+                                        'progress' => $t->progress,
+                                        'start'    => $t->start_date,
+                                        'end'      => $t->finish_date,
+                                        'isLate'   => ($t->finish_date < now() && $t->progress < 100)
+                                    ];
+                                }),
+
+                                // محور التواريخ الموحد (labels)
+                                'timelineProgress' => [
+                                    'dates' => $allDates->values(),          // مثال: ["2025-12-01","2025-12-03", ...]
+                                    'values' => $timeline_progress->values(),// متوسط المشروع بالنسبة لكل تاريخ
+                                ],
+
+                                // قيم كل مهمة مصفوفة متوافقة مع dates
+                                'tasksTimeline' => $tasksTimeline,
+
+                                'stacked'=>[
+                                    'completed'=>$completed,
+                                    'inprogress'=>$inProgress,
+                                    'pending'=>$pending,
+                                ],
+
+                                // لون المشروع (أرسِل boolean و لون إن أردت)
+                                'projectLate' => $projectLate,
+                                'color'=> $projectLate ? 'rgba(255,80,80,0.8)' : 'rgba(60,200,90,0.8)'
+                            ];
+                    
+                    });
+                    
+                return view('manger.hom' , compact('projects' ,'user' ,'unreadMessagesCount' , 'unreadMessages') );
             }  
             elseif ($type == 'member')
             {
@@ -83,7 +196,40 @@ class HomeController extends Controller
             }
             elseif ($type == 'admin') 
             {
-                return view('admin.home' );
+                $minCreated = User::min('created_at');
+                $firstDate = $minCreated
+                    ? \Carbon\Carbon::parse($minCreated)->toDateString()
+                    : now()->toDateString();
+
+                $lastDate = now()->toDateString();
+                $dates = collect();
+                $current = Carbon::parse($firstDate);
+
+                while ($current->lte($lastDate)) {
+                    $dates->push($current->format('Y-m-d'));
+                    $current->addDay();
+                }
+
+                $admins = User::where('role', 'member')
+                ->selectRaw('DATE(created_at) as date, COUNT(*) as total')
+                ->groupBy('date')
+                ->pluck('total', 'date');
+                            $managers = User::where('role', 'manger')
+                ->selectRaw('DATE(created_at) as date, COUNT(*) as total')
+                ->groupBy('date')
+                ->pluck('total', 'date');
+                $projects = Team::selectRaw('DATE(created_at) as date, COUNT(*) as total')
+                ->groupBy('date')
+                ->pluck('total', 'date');
+                $data = [
+                    'dates' => $dates,
+                    'managers' => $dates->map(fn($d) => $managers[$d] ?? 0),
+                    'member' => $dates->map(fn($d) => $admins[$d] ?? 0),
+                    'projects' => $dates->map(fn($d) => $projects[$d] ?? 0),
+                ];
+                
+            
+                return view('admin.hom' , compact('data') );
             }
         }
     }
@@ -142,6 +288,15 @@ class HomeController extends Controller
         $user -> name = $request->input('name') ;
         $user -> email = $request->input('email') ;
         $user -> phone = $request->input('phone') ;
+        if($request->hasfile('image'))
+        {
+   
+            $file = $request->file('image');
+            $extention = $file ->getClientOriginalExtension();
+            $filename = time().'.'.$extention;
+            $file->move('uploads/profile/' , $filename);
+            $user->image = $filename ;
+        }
         $user->update();
         return redirect()-> back()     ->with('status', 'Updated done');
     }
@@ -214,19 +369,33 @@ class HomeController extends Controller
         $user -> role = 'manger' ;
         $user -> job = $request->input('job') ;
         $user -> password =Hash::make($request->input('password'));
+        if($request->hasfile('image'))
+        {
+            if (isset($user->image) )
+            {
+                $destination = 'uploads/profile/'.$user->image;
+                if(File::exists($destination))
+                {
+                    File::delete($destination);
+                }
+            }
+            $file = $request->file('image');
+            $extention = $file ->getClientOriginalExtension();
+            $filename = time().'.'.$extention;
+            $file->move('uploads/profile/' , $filename);
+            $user->image = $filename ;
+        }
         $user->save();
         return redirect()-> back()     ->with('status', 'Added Done' ) ;
     } 
     public function show_member()
     {
-        $user=DB::table('users')
-            ->join('members', 'users.id', '=', 'members.member_id') // جلب بيانات الفريق
-            ->join('availabilities', 'users.id', '=', 'availabilities.user_id') // جلب  توفر العضو
-            ->where('members.manger_id', Auth::user()->id) // البحث عن الفرق التي ينتمي لها المستخدم
-            ->where('users.role' , 'member')
-            ->select('users.*' , 'availabilities.is_available') // استخراج بيانات المدراء فقط
-            ->distinct()
-            ->get();
+        $user = User::where('role', 'member')
+        ->whereHas('teamMembers', function($q){
+            $q->where('manger_id', Auth::id());
+        })
+        ->with(['skills', 'availability','tasks.team'])
+        ->get();
         $unreadMessages = Chat::select('sender_id', DB::raw('count(*) as unread_count'))
             ->where('receiver_id', auth()->id())
             ->where('is_read', 0)
@@ -328,6 +497,14 @@ class HomeController extends Controller
         $user -> name = $request->input('name') ;
         $user -> email = $request->input('email') ;
         $user -> phone = $request->input('phone') ;
+        if($request->hasfile('image'))
+        {
+            $file = $request->file('image');
+            $extention = $file ->getClientOriginalExtension();
+            $filename = time().'.'.$extention;
+            $file->move('uploads/profile/' , $filename);
+            $user->image = $filename ;
+        }
         $user->update();
         return redirect()-> back()     ->with('status', 'Updated done');
     }
@@ -421,6 +598,23 @@ class HomeController extends Controller
         $user -> role = 'member' ;
         $user -> job = $request->input('job') ;
         $user -> password =Hash::make($request->input('password'));
+        
+        if($request->hasfile('image'))
+        {
+            if (isset($user->image) )
+            {
+                $destination = 'uploads/profile/'.$user->image;
+                if(File::exists($destination))
+                {
+                    File::delete($destination);
+                }
+            }
+            $file = $request->file('image');
+            $extention = $file ->getClientOriginalExtension();
+            $filename = time().'.'.$extention;
+            $file->move('uploads/profile/' , $filename);
+            $user->image = $filename ;
+        }
         $user->save();
         $member = new Member();
         $member->manger_id = Auth::user()->id;
@@ -500,6 +694,15 @@ class HomeController extends Controller
         $user -> name = $request->input('name') ;
         $user -> email = $request->input('email') ;
         $user -> phone = $request->input('phone') ;
+        if($request->hasfile('image'))
+        {
+           
+            $file = $request->file('image');
+            $extention = $file ->getClientOriginalExtension();
+            $filename = time().'.'.$extention;
+            $file->move('uploads/profile/' , $filename);
+            $user->image = $filename ;
+        }
         $user->update();
         return redirect()-> back()     ->with('status', 'Updated done');
     }
@@ -632,7 +835,10 @@ class HomeController extends Controller
             ->get()
             ->keyBy('sender_id');
            $notifications = Notification::where('user_id', Auth::id())->orderBy('created_at', 'desc')->get();
-
+           $unread = Chat::where('sender_id', $receive->id)
+           ->where('receiver_id', auth()->id())
+           ->where('is_read', 0)
+           ->update(['is_read' => 1]);
         return view('member.chat' , compact('notifications' , 'user' , 'receive' , 'id' , 'messages' ,'unreadMessagesCount' , 'unreadMessages') );
     }
     public function chat_member($id)
@@ -647,6 +853,7 @@ class HomeController extends Controller
             $query->where('sender_id', $id)
                   ->where('receiver_id', Auth::user()->id);
         })->get();
+        
         $user=DB::table('users')
         ->join('members', 'users.id', '=', 'members.member_id') // جلب بيانات الفريق
         ->where('members.manger_id', Auth::user()->id) // البحث عن الفرق التي ينتمي لها المستخدم
@@ -662,6 +869,12 @@ class HomeController extends Controller
         ->groupBy('sender_id')
         ->get()
         ->keyBy('sender_id');
+
+        $unread = Chat::where('sender_id', $receive->id)
+        ->where('receiver_id', auth()->id())
+        ->where('is_read', 0)
+        ->update(['is_read' => 1]);
+      
         return view('manger.chat' , compact( 'user' , 'receive' , 'id' , 'messages','unreadMessagesCount' , 'unreadMessages') );
     }
 
@@ -713,7 +926,7 @@ class HomeController extends Controller
     
     public function show_group()
     {
-        $group = Team::where('manger_id' , Auth::user()->id)->get();
+        $group = Team::with('members')->where('manger_id', Auth::id())->get();
         $user=DB::table('users')
         ->join('members', 'users.id', '=', 'members.member_id') // جلب بيانات الفريق
         ->where('members.manger_id', Auth::user()->id) // البحث عن الفرق التي ينتمي لها المستخدم
@@ -857,13 +1070,19 @@ class HomeController extends Controller
     public function add_task($id)
     {
         $team = Team::find($id);
-        $member=DB::table('users')
-        ->join('members', 'users.id', '=', 'members.member_id') // جلب بيانات الفريق
-        ->join('availabilities', 'users.id', '=', 'availabilities.user_id') // جلب  توفر العضو
-        ->where('members.manger_id', Auth::user()->id) // البحث عن الفرق التي ينتمي لها المستخدم
-        ->where('users.role' , 'member')
-        ->select('users.*' , 'availabilities.is_available') // استخراج بيانات المدراء فقط
-        ->distinct()
+        $projectSkills = json_decode($team->project_skill, true); 
+        $member = DB::table('users')
+        ->join('skills', 'users.id', '=', 'skills.member_id') 
+        ->join('availabilities', 'users.id', '=', 'availabilities.user_id') 
+        ->where('role' , 'member')
+        ->whereIn('skills.skill', $projectSkills)
+        ->select(
+            'users.id',
+            'users.name',
+            'availabilities.is_available',
+            DB::raw('GROUP_CONCAT(skills.skill SEPARATOR ", ") as member_skills')
+        )
+        ->groupBy('users.id', 'users.name', 'availabilities.is_available')
         ->get();
          $user=DB::table('users')
         ->join('members', 'users.id', '=', 'members.member_id') // جلب بيانات الفريق
@@ -931,6 +1150,21 @@ class HomeController extends Controller
     {
         $task = Task::where('id' , $id)->
         with(['document', 'member' , 'team'])->first();
+        $team = Team::find($task->team_id);
+        $projectSkills = json_decode($team->project_skill, true); 
+        $member = DB::table('users')
+        ->join('skills', 'users.id', '=', 'skills.member_id') 
+        ->join('availabilities', 'users.id', '=', 'availabilities.user_id') 
+        ->where('role' , 'member')
+        ->whereIn('skills.skill', $projectSkills)
+        ->select(
+            'users.id',
+            'users.name',
+            'availabilities.is_available',
+            DB::raw('GROUP_CONCAT(skills.skill SEPARATOR ", ") as member_skills')
+        )
+        ->groupBy('users.id', 'users.name', 'availabilities.is_available')
+        ->get();
         $user=DB::table('users')
         ->join('members', 'users.id', '=', 'members.member_id') // جلب بيانات الفريق
         ->where('members.manger_id', Auth::user()->id) // البحث عن الفرق التي ينتمي لها المستخدم
@@ -947,7 +1181,7 @@ class HomeController extends Controller
         ->where('is_read', 0)
         ->count();
 
-        return view('manger.group.edit-task' , compact('task' , 'user','unreadMessagesCount' , 'unreadMessages') );
+        return view('manger.group.edit-task' , compact('member' , 'task' , 'user','unreadMessagesCount' , 'unreadMessages') );
     }
 
     public function update_task(Request $request )
@@ -956,7 +1190,8 @@ class HomeController extends Controller
         $id = $request->input('id');
         $task= Task::find($id);
         $task -> member_id = $request->input('member') ;
-    
+        $task -> finish_date = $request->input('finish_date') ;
+
         $task->update();
         return redirect()-> route('manger.show.group')     ->with('status', 'update Done' ) ;
  
@@ -1017,6 +1252,29 @@ class HomeController extends Controller
         $notifications = Notification::where('user_id', Auth::id())->orderBy('created_at', 'desc')->get();
 
         return view('member.group.team' , compact('notifications' , 'member' , 'user' ,'unreadMessagesCount' , 'unreadMessages') );
+    }
+    public function show_task_member($id)
+    {
+        $task = Task::where('team_id' , $id)->get();
+        $user = DB::table('tasks')
+        ->join('teams', 'teams.id', '=', 'tasks.team_id') // جلب بيانات الفريق
+        ->join('users as managers', 'managers.id', '=', 'teams.manger_id') // جلب بيانات المدير
+        ->where('tasks.member_id', Auth::user()->id) // البحث عن الفرق التي ينتمي لها المستخدم
+        ->select('managers.*') // استخراج بيانات المدراء فقط
+        ->distinct() // تجنب التكرار في حالة تعدد المهام
+        ->get();
+        $unreadMessagesCount = Chat::where('receiver_id', auth()->id())
+                            ->where('is_read', 0)
+                            ->count();
+        $unreadMessages = Chat::select('sender_id', DB::raw('count(*) as unread_count'))
+        ->where('receiver_id', auth()->id())
+        ->where('is_read', 0)
+        ->groupBy('sender_id')
+        ->get()
+        ->keyBy('sender_id');
+        $notifications = Notification::where('user_id', Auth::id())->orderBy('created_at', 'desc')->get();
+
+        return view('member.group.table-task' , compact('notifications' , 'task' , 'user' ,'unreadMessagesCount' , 'unreadMessages') );
     }
     public function show_my_task()
     {
@@ -1123,8 +1381,26 @@ class HomeController extends Controller
         }
 
         $task->update();
+        ProgressHistory::create([
+            'task_id' => $task->id,
+            'progress' => $task->progress,
+            'recorded_at' => now()
+        ]);
     
         return redirect()->route('member.show.task')->with('status', 'Report uploaded and progress updated!');
     }
+
+    public function generate($id)
+{
+    $team = Team::with(['tasks.member', 'members', 'manger'])->findOrFail($id);
+
+    $pdf = FacadePdf::loadView('manger.group.report', [
+        'team' => $team,
+        'members' => $team->members,
+        'tasks' => $team->tasks
+    ]);
+
+    return $pdf->download('project-report-' . $team->project_name . '.pdf');
+}
 }
 

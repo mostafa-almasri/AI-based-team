@@ -6,7 +6,7 @@
                 <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
                     <div class="normal-table-list mg-t-30">
                         <div class="basic-tb-hd">
-                            <h2>My tasks</h2>
+                            <h2 class="text-center">Management tasks</h2>
                         </div>
                         <div class="bsc-tbl-hvr">
                         @if($task->count()>0)
@@ -30,7 +30,10 @@
                                 @php
                                     $now = \Carbon\Carbon::now(); // الحصول على الوقت الحالي
                                     $finishDate = \Carbon\Carbon::parse($row->finish_date); // تحويل finish_date إلى كائن Carbon
+                                    $startDate = \Carbon\Carbon::parse($row->start_date);
+
                                 @endphp
+                                
                                     <tr>
                                     <td>{{$row->team->project_name}}</td>
                                         <td>{{$row->task_name}}</td>
@@ -50,14 +53,16 @@
 
 
                                         <td>
-                                            <a href="{{route('member.add.document', ['id'=>$row->id])}}" class="btn btn-danger"
-                                            @if($now->greaterThan($finishDate) && $row->status == 'Not implemented') 
-                                                disabled 
-                                            @elseif($row->status == 'Implemented')
-                                                disabled 
-                                            @endif>
-                                            Add report
+                                        @if($now->between($startDate, $finishDate))
+                                            <a href="{{ route('member.add.document', ['id' => $row->id]) }}" class="btn btn-danger">
+                                                Add report
                                             </a>
+                                        @else
+                                            <a class="btn btn-danger disabled" aria-disabled="true">
+                                                Add report
+                                            </a>
+                                        @endif
+                                         
                                         </td>
 
                                     </tr>

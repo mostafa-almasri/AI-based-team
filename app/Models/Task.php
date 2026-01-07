@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Models\Team;
 use App\Models\User;
 use App\Models\Document;
+use App\Models\ProgressHistory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
@@ -34,4 +35,12 @@ class Task extends Model
     {
         return $this->hasone(Document::class , 'task_id');
     }
+    public function isLate()
+{
+    return $this->finish_date < now() && $this->progress < 100;
+}
+public function progressHistory()
+{
+    return $this->hasMany(ProgressHistory::class);
+}
 }

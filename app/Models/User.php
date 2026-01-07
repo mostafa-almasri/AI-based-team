@@ -28,10 +28,11 @@ class User extends Authenticatable
         'phone',
         'role',
         'job',
+        'image'
     ];
     public function teamMembers()
     {
-        return $this->hasMany(Member::class, 'manger_id');
+        return $this->hasMany(Member::class, 'member_id');
     }
     public function skills()
     {
@@ -41,7 +42,7 @@ class User extends Authenticatable
     {
         return $this->hasOne(Availability::class, 'user_id');
     }
-    public function member()
+    public function tasks()
     {
         return $this->hasMany(Task::class, 'member_id');
     }

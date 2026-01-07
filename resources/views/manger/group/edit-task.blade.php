@@ -37,23 +37,59 @@
                                         <div class="nk-int-st">
                                             <select name="member" id="" class="form-control input-sm">
                                                 <option value="{{$task->member_id}}">{{$task->member->name}}</option>
-                                                @foreach($user as $row)
-                                                <option value="{{$row->id}}">{{$row->name}}</option>
-
+                                                @if($member->count()>0)
+                                                @foreach($member as $row)
+                                                <option value="{{$row->id}}">
+                                                    {{$row->name}} - {{$row->is_available ? 'Available' : 'Busy'}} - Skills: {{$row->member_skills }}
+                                                </option>
                                                 @endforeach
+                                                @else
+                                                <option value="">No member for this group</option>
+                                                @endif
                                             </select>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                     
+                        <div class="form-example-int form-horizental">
+                            <div class="form-group">
+                                <div class="row">
+                                    <div class="col-lg-2 col-md-3 col-sm-3 col-xs-12">
+                                        <label class="hrzn-fm">Finish date</label>
+                                    </div>
+                                    <div class="col-lg-8 col-md-7 col-sm-7 col-xs-12">
+                                        <div class="nk-int-st">
+                                            
+                                            <input type="date" id="task_end"  class="form-control input-sm"  name="finish_date" value="{{$task->finish_date}}">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <script>
+                            // تاريخ اليوم
+                            const today = new Date().toISOString().split('T')[0];
+
+                            // تاريخ انتهاء المشروع من Laravel
+                            const projectEnd = "{{ $task->team->time_frame }}";
+
+                            const startInput = "{{ $task->start_date }}";
+                            const endInput   = document.getElementById('task_end');
+
+                          
+                            // حدود نهاية المهمة
+                            endInput.min = startInput;
+                            endInput.max = projectEnd;
+
+                       
+                        </script>
                         <div class="form-example-int mg-t-15">
                             <div class="row">
                                 <div class="col-lg-2 col-md-3 col-sm-3 col-xs-12">
                                 </div>
                                 <div class="col-lg-8 col-md-7 col-sm-7 col-xs-12">
-                                    <button class="btn btn-success notika-btn-success">Update</button>
+                                    <button class="btn btn-primary notika-btn-primary">Update</button>
                                 </div>
                             </div>
                         </div>

@@ -2,11 +2,13 @@
 @section('content')
 <div class="normal-table-area">
         <div class="container">
-        <a href="{{route('member.add.skill')}}" class="btn btn-info">+ Add skill</a>
+        <a href="{{route('member.add.skill')}}" class="btn btn-info" style="margin-top:10px">+ Add skill</a>
 
             <div class="row">
                 <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
                     <div class="normal-table-list mg-t-30">
+                    <h2 class="text-center">Management skills</h2>
+
                         <div class="basic-tb-hd">
                             <h2>Skills</h2>
                         </div>

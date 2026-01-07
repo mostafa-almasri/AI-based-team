@@ -10,23 +10,31 @@
             <div class="col-xl-12 col-lg-12 col-md-12">
 
 <ul class="chat-thread" id="chatThread">
-    @foreach($messages as $index => $message)
+@foreach($messages as $index => $message)
+    @php
+        $isSameSender = ($index > 0 && $messages[$index - 1]->sender_id == $message->sender_id);
+        $isMine = $message->sender_id == Auth::id();
+    @endphp
 
-        @php
-            // تحقق مما إذا كانت الرسالة الحالية من نفس المرسل مثل الرسالة السابقة
-            $isSameSender = ($index > 0 && $messages[$index - 1]->sender_id == $message->sender_id);
-        @endphp
-        <li class="{{ $message->sender_id == Auth::user()->id ? 'sent' : 'received' }}">
-            @if(!$isSameSender)
-                <img class="avatar" src="{{ asset('profile.png') }}" alt="User Avatar" />
-            @endif
-            <div>
-            <span class="message-text">{{ $message->message }}</span> <br>
+    <li class="{{ $isMine ? 'sent' : 'received' }}">
+        {{-- إذا لم تكن رسالة من نفس المرسل فأعرض الصورة --}}
+        @if(!$isSameSender)
+            @php
+                $avatar = $message->sender->image;
+                $avatarUrl = $avatar ? asset('uploads/profile/'.$avatar) : asset('profile.png');
+                $alt = $message->sender->name ?? 'User';
+            @endphp
+            <img src="{{ $avatarUrl }}" alt="{{ $alt }}" class="avatar">
+        @else
+            {{-- بدّل هذا العنصر حسب التصميم: يمكن تركه فارغًا للمحاذاة أو لا تضع شيئًا --}}
+            <div class="avatar-spacer"></div>
+        @endif
+
+        <div class="message-body">
+            <span class="message-text">{{ $message->message }}</span><br>
             <span class="message-time">{{ $message->sent_at }}</span>
-
-            </div>
-          
-        </li>
+        </div>
+    </li>
     @endforeach
 </ul>
 <form class="chat-window" id="chatWindow" >

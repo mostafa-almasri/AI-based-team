@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
-    <title>Al-Based team</title>
+    <title>TMS</title>
     <meta name="description" content="">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="{{asset('chat.css')}}">
@@ -27,10 +27,11 @@
                 <div class="col-lg-4 col-md-4 col-sm-12 col-xs-12">
                     <div class="logo-area">
  <a href="{{url('/')}}" style="display: flex;" >         <img  src="{{url('../assets/img/logo.png')}}" alt="" width="50px" height="50px">
-                    <h1 style="color:white; margin:10px">Al-Based team</h1></a>
+                    <h1 style="color:white; margin:10px">TMS</h1></a>
                     </div>
                 </div>
-                <div class="col-lg-8 col-md-8 col-sm-12 col-xs-12">
+                                <div class="col-lg-8 col-md-8 col-sm-12 col-xs-12" style="margin-top: 15px;">
+
                     <div class="header-top-menu">
                         <ul class="nav navbar-nav notika-top-nav">
       
@@ -74,10 +75,10 @@
                     <div class="mobile-menu">
                         <nav id="dropdown">
                             <ul class="mobile-menu-nav">
-                                <li><a data-toggle="collapse"  href="{{url('/home')}}">Home</a>
+                                <li class="{{ Request::is('home*')  ? 'active' : '' }}"><a data-toggle="collapse"  href="{{url('/home')}}">Home</a>
                                    
                                 </li>
-                                <li><a data-toggle="collapse"  href="{{route('admin.show.user')}}">Mangement account</a>
+                                <li class="{{ Request::is('admin/user*')  ? 'active' : '' }}"><a data-toggle="collapse"  href="{{route('admin.show.user')}}">Mangement Manager account</a>
                            
                                 </li>
                 
@@ -96,13 +97,14 @@
             <div class="row">
                 <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
                     <ul class="nav nav-tabs notika-menu-wrap menu-it-icon-pro">
-                        <li class="active"><a data-toggle="tab" href="{{url('/home')}}"><i class="notika-icon notika-house"></i> Home</a>
+                    <li class="{{ Request::is('home*')  ? 'active' : '' }}"><a  href="{{url('/home')}}"><i class="notika-icon notika-house"></i> Home</a>
                         </li>
-                        <li><a  href="{{route('admin.show.user')}}"><i class="notika-icon notika-support"></i> Mangement accounts</a>
+                        <li class="{{ Request::is('admin/user*')  ? 'active' : '' }}"><a  href="{{route('admin.show.user')}}"><i class="notika-icon notika-support"></i> Mangement Manager accounts</a>
                         </li>
                     </ul>
                     <div class="tab-content custom-menu-content">
                       
+                    @yield('content')
 
              
       
@@ -113,7 +115,6 @@
         </div>
     </div>
     <!-- Main Menu area End-->
-    @yield('content')
 
     <!-- End Footer area-->
     <script src="{{asset('script.js')}}"></script>
